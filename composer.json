@@ -1,0 +1,70 @@
+{
+    "name": "splicewire/laravel-beam-embed",
+    "description": "The generic embed subsystem (recohere T02): the schema-driven-CMS embed surface lifted DOWN out of tower-embed onto beam-core. Spawner / publisher / budget / usage-meter / retention / escalation / groundedness-signal / humanity-check + the capability grant/token/tier value objects + the embed models (Embed, Visitor, EmbedKey, EmbedSpendReservation, EmbedCapabilityAudit) — all tower-ref-free. KNOWLEDGE-grounding is INVERTED behind two ports (KnowledgePivotFreezer, ScopeResolver): beam-embed ships NO-OP defaults so a bare beam site works, and tower-embed binds the real tower-Thread-backed implementations. Free-tier arm of the Beam family (ADR-0138 / ADR-0092). Depends DOWN on beam-core + beam-commerce + beam-tenancy; never onto tower/satellite.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "illuminate/contracts": "^11.0|^12.0|^13.0",
+        "illuminate/database": "^11.0|^12.0|^13.0",
+        "illuminate/http": "^11.0|^12.0|^13.0",
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "splicewire/laravel-beam": "*",
+        "splicewire/laravel-beam-commerce": "*",
+        "splicewire/laravel-beam-tenancy": "*"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "phpunit/phpunit": "^11.0|^12.0",
+        "wikimedia/composer-merge-plugin": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Splicewire\\Beam\\Embed\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Splicewire\\Beam\\Embed\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "package-topology": {
+            "because": "beam-embed is a beam-family package: it depends DOWN on beam-core + beam-commerce + beam-tenancy and must never require the tower/satellite tiers it is consumed by",
+            "mustRequire": [
+                "splicewire/laravel-beam"
+            ],
+            "mustNotRequire": [
+                "splicewire/tower*",
+                "splicewire/laravel-tower-*",
+                "splicewire/laravel-satellite*"
+            ]
+        },
+        "branch-alias": {
+            "dev-main": "1.0.x-dev"
+        },
+        "laravel": {
+            "providers": [
+                "Splicewire\\Beam\\Embed\\BeamEmbedServiceProvider"
+            ]
+        },
+        "merge-plugin": {
+            "include": [
+                "composer.local.json"
+            ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "wikimedia/composer-merge-plugin": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "pint": "@php -d memory_limit=512M vendor/bin/pint",
+        "test": "@php vendor/bin/phpunit"
+    }
+}
