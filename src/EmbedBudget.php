@@ -7,7 +7,7 @@ use Splicewire\Beam\Commerce\Budget\EffectiveBudget;
 use Splicewire\Beam\Commerce\Budget\SpendContext;
 use Splicewire\Beam\Commerce\Budget\SpendingCap;
 use Splicewire\Beam\Commerce\Budget\StopKind;
-use App\Data\BudgetVerdictData;
+use Splicewire\Beam\Commerce\Data\BudgetVerdictData;
 use Splicewire\Beam\Embed\Models\EmbedSpendReservation;
 use Splicewire\Beam\Models\ChatBase;
 use Illuminate\Support\Facades\DB;

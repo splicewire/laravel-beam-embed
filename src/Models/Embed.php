@@ -69,7 +69,7 @@ class Embed extends ChatBase
      * empty `embed` lineage. Carries only the key + HEAD pin. (A version WRITE additionally needs the
      * full working columns, so publishing re-resolves a full base model from the persisted row.)
      *
-     * The base class is the host's `config('embed.base_model')` (tower binds `App\Models\Thread`), with
+     * The base class is the host's `config('embed.base_model')` (tower binds `Splicewire\Tower\Models\Thread`), with
      * a {@see ChatBase} fallback on a bare beam site (recohere T02).
      */
     public function versionable(): ChatBase

@@ -9,7 +9,7 @@ use Splicewire\Beam\Models\BeamSubmission;
  * hands a human-exit off through the submission / intake path — a {@see BeamSubmission} (a beam
  * BeamParticle) whose persist emits `BeamParticlePersisted`, which the tenant's chosen intent delivers.
  *
- * The tower orchestrator that actually runs that write (`App\Submissions\RecordsSubmissions`) depends
+ * The tower orchestrator that actually runs that write (`Splicewire\Tower\Submissions\RecordsSubmissions`) depends
  * on tower-only classes (the central form registry, the write/acceptance gates), so it cannot move DOWN
  * into beam-embed without dragging tower up. It is inverted behind this port instead:
  *

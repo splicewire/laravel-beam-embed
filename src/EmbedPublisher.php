@@ -150,7 +150,7 @@ class EmbedPublisher
      *    fresh read captures the persisted state (the same footgun Composition's provision-seed hits).
      *
      * The base model is the host's base conversation class (recohere T02): `config('embed.base_model')`,
-     * which tower binds to `App\Models\Thread` so the morph stays `thread`. A bare beam site leaves it
+     * which tower binds to `Splicewire\Tower\Models\Thread` so the morph stays `thread`. A bare beam site leaves it
      * unset and falls back to {@see ChatBase}. Loss-free because every caller persists the working row
      * *before* snapshotting.
      */
