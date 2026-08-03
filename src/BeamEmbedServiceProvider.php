@@ -46,5 +46,14 @@ class BeamEmbedServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // No boot-time work: routes/controllers/config stay with the host (tower-embed).
+
+        // BC alias for the pre-recohere home (recohere Lane A cluster 7): EmbedPolicy moved down
+        // from Splicewire\Tower\Policies to Splicewire\Beam\Embed\Policies.
+        if (! class_exists(\Splicewire\Tower\Policies\EmbedPolicy::class, false)) {
+            class_alias(
+                \Splicewire\Beam\Embed\Policies\EmbedPolicy::class,
+                \Splicewire\Tower\Policies\EmbedPolicy::class,
+            );
+        }
     }
 }
