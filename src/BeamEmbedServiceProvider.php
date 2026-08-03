@@ -11,6 +11,9 @@ use Splicewire\Beam\Embed\Contracts\SubmissionRecorder;
 use Splicewire\Beam\Embed\Types\EmbedType;
 use Splicewire\Beam\Embed\Types\EmbedTypeRegistry;
 use Splicewire\Beam\Embed\Types\GenericEmbedType;
+use Splicewire\Beam\Workflows\BeamWorkflowsServiceProvider;
+use Splicewire\Tower\Policies\EmbedPolicy;
+use Splicewire\Tower\TowerServiceProvider;
 
 /**
  * The generic embed subsystem provider (recohere T02; generalized T30). Binds the NO-OP / default
@@ -45,15 +48,52 @@ class BeamEmbedServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // No boot-time work: routes/controllers/config stay with the host (tower-embed).
+        // Routes/controllers/config stay with the host (tower-embed); the embed-OWNED tenant
+        // migrations are homed here (see bootMigrations()).
+        $this->bootMigrations();
 
         // BC alias for the pre-recohere home (recohere Lane A cluster 7): EmbedPolicy moved down
         // from Splicewire\Tower\Policies to Splicewire\Beam\Embed\Policies.
-        if (! class_exists(\Splicewire\Tower\Policies\EmbedPolicy::class, false)) {
+        if (! class_exists(EmbedPolicy::class, false)) {
             class_alias(
-                \Splicewire\Beam\Embed\Policies\EmbedPolicy::class,
-                \Splicewire\Tower\Policies\EmbedPolicy::class,
+                Policies\EmbedPolicy::class,
+                EmbedPolicy::class,
             );
+        }
+    }
+
+    /**
+     * Home the embed-OWNED tenant migrations in this package so it self-provisions (recohere
+     * migration relocation sweep).
+     *
+     * TENANT-ONLY. `embed_spend_reservations` (prepaid-wallet holds, DIE-12) and
+     * `embed_capability_audits` (brokered-capability audit trail, RCP-05) are both written on the
+     * current tenant connection — tenancy is already initialized (InitializeTenancyByEmbedKey)
+     * before either table is touched — so there is NO central {@see loadMigrationsFrom()}; adding
+     * one would wrongly create these tables in the central schema. Stancl tenancy has no
+     * auto-discovery for tenant migrations; `tenants:migrate` reads the ARRAY at
+     * `config('tenancy.migration_parameters.--path')` at runtime, so we push this package's
+     * `database/migrations/tenant` dir onto it (install-location-agnostic, idempotent). Boot runs at
+     * app-bootstrap, well before the command reads config, so ordering holds. Mirrors the tenant
+     * half of {@see BeamWorkflowsServiceProvider::bootMigrations()} and
+     * {@see TowerServiceProvider::bootMigrations()}.
+     *
+     * Gated by `config('beam.embed.register_migrations', true)` — defaults on, matching the
+     * tower/beam-workflows exemplar's opt-out shape.
+     */
+    protected function bootMigrations(): void
+    {
+        if (! config('beam.embed.register_migrations', true)) {
+            return;
+        }
+
+        $tenantDir = realpath(__DIR__.'/../database/migrations/tenant')
+            ?: __DIR__.'/../database/migrations/tenant';
+
+        $paths = config('tenancy.migration_parameters.--path', []);
+
+        if (! in_array($tenantDir, $paths, true)) {
+            config()->push('tenancy.migration_parameters.--path', $tenantDir);
         }
     }
 }
