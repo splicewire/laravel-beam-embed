@@ -49,8 +49,10 @@ class BeamEmbedServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Routes/controllers/config stay with the host (tower-embed); the embed-OWNED tenant
-        // migrations are homed here (see bootMigrations()).
-        $this->bootMigrations();
+        // migrations are published from here (see bootMigrations()).
+        if ($this->app->runningInConsole()) {
+            $this->bootMigrations();
+        }
 
         // BC alias for the pre-recohere home (recohere Lane A cluster 7): EmbedPolicy moved down
         // from Splicewire\Tower\Policies to Splicewire\Beam\Embed\Policies.
@@ -63,37 +65,32 @@ class BeamEmbedServiceProvider extends ServiceProvider
     }
 
     /**
-     * Home the embed-OWNED tenant migrations in this package so it self-provisions (recohere
-     * migration relocation sweep).
+     * PUBLISH-ONLY tenant migrations — the idiomatic pattern for a PLAIN ServiceProvider, mirroring
+     * the beam-workflows exemplar (commit 994aba1). Undo of the recohere runtime `--path` push.
+     *
+     * A plain provider has no spatie/laravel-package-tools machinery, so this uses Laravel's native
+     * {@see ServiceProvider::publishesMigrations()} (Laravel 11+). It does NOT loadMigrationsFrom and
+     * does NOT push onto `tenancy.migration_parameters.--path`: the package never runs these at
+     * runtime. `vendor:publish --tag=beam-embed-migrations` drops the copies into the HOST's
+     * `database/migrations/tenant/`, and the host's Stancl tenant pass runs them.
      *
      * TENANT-ONLY. `embed_spend_reservations` (prepaid-wallet holds, DIE-12) and
      * `embed_capability_audits` (brokered-capability audit trail, RCP-05) are both written on the
-     * current tenant connection — tenancy is already initialized (InitializeTenancyByEmbedKey)
-     * before either table is touched — so there is NO central {@see loadMigrationsFrom()}; adding
-     * one would wrongly create these tables in the central schema. Stancl tenancy has no
-     * auto-discovery for tenant migrations; `tenants:migrate` reads the ARRAY at
-     * `config('tenancy.migration_parameters.--path')` at runtime, so we push this package's
-     * `database/migrations/tenant` dir onto it (install-location-agnostic, idempotent). Boot runs at
-     * app-bootstrap, well before the command reads config, so ordering holds. Mirrors the tenant
-     * half of {@see BeamWorkflowsServiceProvider::bootMigrations()} and
-     * {@see TowerServiceProvider::bootMigrations()}.
+     * current tenant connection — tenancy is already initialized (InitializeTenancyByEmbedKey) before
+     * either table is touched — so they publish ONLY into `database/migrations/tenant/`: there is NO
+     * flat/central twin (that would wrongly create these tables in the central schema) and no
+     * `Schema::hasTable()` dup-guard (that guard is only for a ubiquitous table's tenant twin; these
+     * leaf tables have no central pass to collide with).
      *
-     * Gated by `config('beam.embed.register_migrations', true)` — defaults on, matching the
-     * tower/beam-workflows exemplar's opt-out shape.
+     * The publishable source files carry their own valid timestamp prefix and ship as plain `.php`.
+     * With `database.migrations.update_date_on_publish` at its default (false), native
+     * `publishesMigrations` copies each file verbatim — one correctly-timestamped migration per table,
+     * no double-stamp.
      */
     protected function bootMigrations(): void
     {
-        if (! config('beam.embed.register_migrations', true)) {
-            return;
-        }
-
-        $tenantDir = realpath(__DIR__.'/../database/migrations/tenant')
-            ?: __DIR__.'/../database/migrations/tenant';
-
-        $paths = config('tenancy.migration_parameters.--path', []);
-
-        if (! in_array($tenantDir, $paths, true)) {
-            config()->push('tenancy.migration_parameters.--path', $tenantDir);
-        }
+        $this->publishesMigrations([
+            __DIR__.'/../database/migrations/tenant' => $this->app->databasePath('migrations/tenant'),
+        ], 'beam-embed-migrations');
     }
 }
