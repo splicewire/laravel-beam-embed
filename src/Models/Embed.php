@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 use Rushing\Versioning\Contracts\Versionable;
 use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Threads\Concerns\ConversationParticle;
+use Splicewire\Beam\Threads\Concerns\EmbedParticle;
 use Splicewire\Beam\Threads\Enums\ThreadKind;
 
 /**
@@ -31,6 +32,7 @@ use Splicewire\Beam\Threads\Enums\ThreadKind;
 class Embed extends Model implements Conversation, Versionable
 {
     use ConversationParticle;
+    use EmbedParticle;
 
     /**
      * The SAME physical table as the base conversation — an Embed IS a `threads` row (of kind

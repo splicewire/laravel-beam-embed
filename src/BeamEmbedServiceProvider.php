@@ -12,8 +12,6 @@ use Splicewire\Beam\Embed\Types\EmbedType;
 use Splicewire\Beam\Embed\Types\EmbedTypeRegistry;
 use Splicewire\Beam\Embed\Types\GenericEmbedType;
 use Splicewire\Beam\Workflows\BeamWorkflowsServiceProvider;
-use Splicewire\Tower\Policies\EmbedPolicy;
-use Splicewire\Tower\TowerServiceProvider;
 
 /**
  * The generic embed subsystem provider (recohere T02; generalized T30). Binds the NO-OP / default
@@ -52,15 +50,6 @@ class BeamEmbedServiceProvider extends ServiceProvider
         // migrations are published from here (see bootMigrations()).
         if ($this->app->runningInConsole()) {
             $this->bootMigrations();
-        }
-
-        // BC alias for the pre-recohere home (recohere Lane A cluster 7): EmbedPolicy moved down
-        // from Splicewire\Tower\Policies to Splicewire\Beam\Embed\Policies.
-        if (! class_exists(EmbedPolicy::class, false)) {
-            class_alias(
-                Policies\EmbedPolicy::class,
-                EmbedPolicy::class,
-            );
         }
     }
 

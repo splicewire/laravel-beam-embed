@@ -1,0 +1,52 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * The `embed_sessions` sidecar (TH-07 header migration, phase 3) — the EMBED/PUBLISH facet of a conversation,
+ * split off the legacy `threads` row so the tower Thread header can move onto the generic `beam_threads`
+ * particle. One row per embed template/session, keyed by `thread_id` (PK) = the particle id (the
+ * companion-by-id pattern): the substrate Thread's id IS the embed-session id.
+ *
+ * PUBLISH-ONLY, TENANT-scoped: like the other beam-embed tenant tables, this ships publishable
+ * (`vendor:publish --tag=beam-embed-migrations`) and the HOST's Stancl tenant pass runs it. It never runs at
+ * package runtime and has no central twin.
+ *
+ * COLUMN SHAPE — the embed-only fields the conversation used to carry inline on `threads`:
+ *   - `thread_id` (uuid PK, = the particle id) — the companion pointer
+ *   - `visitor_id` (uuid)      — the visitor who owns a session (nullable on a template)
+ *   - `published_from_id` (uuid) — self-FK: the template a session was spawned from (nullable on a template)
+ *   - `snapshot_config` (json) — the FROZEN turn config a session renders under (EmbedFrozenConfig reads it)
+ *   - `template_version` (uint) — the publish counter bumped on each EmbedPublisher::publish()
+ *   - `embed_policy` (json)    — LIVE operational policy (kill-switch, allowed origins, wallet, cosmetics)
+ *   - `retention_days` (uint)  — session-prune window
+ *   - `session_status`         — bot | escalated | … (a session's live lifecycle)
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('embed_sessions', function (Blueprint $table) {
+            // The companion pointer AND primary key — an embed-session row shares the particle's id.
+            $table->uuid('thread_id')->primary();
+
+            $table->uuid('visitor_id')->nullable()->index();
+            $table->uuid('published_from_id')->nullable()->index();
+
+            $table->json('snapshot_config')->nullable();
+            $table->unsignedInteger('template_version')->nullable();
+            $table->json('embed_policy')->nullable();
+            $table->unsignedInteger('retention_days')->nullable();
+            $table->string('session_status')->nullable();
+
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('embed_sessions');
+    }
+};
