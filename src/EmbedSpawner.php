@@ -8,7 +8,9 @@ use RuntimeException;
 use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Embed\Contracts\KnowledgePivotFreezer;
 use Splicewire\Beam\Embed\Models\Visitor;
+use Splicewire\Beam\Threads\Enums\ParticipantRole;
 use Splicewire\Beam\Threads\Enums\ThreadKind;
+use Splicewire\Beam\Threads\Models\Participant;
 
 /**
  * Spawns a visitor-owned `embed_session` from a published template (DIE-04 / ADR-0062). The effective
@@ -76,11 +78,15 @@ class EmbedSpawner
             'session_status' => 'bot',
         ]));
 
-        // A session is visitor-owned: guarantee user_id stays null even if a User is
-        // authenticated at spawn time (the HasUserId hook would otherwise stamp it).
-        // A query-builder update bypasses the model updating hook.
-        $session->newQuery()->whereKey($session->getKey())->update(['user_id' => null]);
-        $session->setAttribute('user_id', null);
+        // A session is visitor-owned: guarantee it has NO owner-User participant even if a User is
+        // authenticated at spawn time (TH-07 header migration phase 4 — ownership is an owner Participant,
+        // not a `user_id` column). The HasUserId creating-hook may have stamped an owner from the current
+        // auth, so drop any owner-User participant on the freshly-spawned session outright.
+        Participant::query()
+            ->where('thread_id', $session->getKey())
+            ->where('role', ParticipantRole::Owner->value)
+            ->where('actor_type', 'user')
+            ->delete();
 
         // Freeze knowledge grounding through the inversion port (T02).
         $this->freezer->freeze($session, $published);

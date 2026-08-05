@@ -4,12 +4,16 @@ namespace Splicewire\Beam\Embed\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 use Rushing\Versioning\Contracts\Versionable;
 use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Threads\Concerns\ConversationParticle;
 use Splicewire\Beam\Threads\Concerns\EmbedParticle;
+use Splicewire\Beam\Threads\Concerns\HasSidecarColumns;
 use Splicewire\Beam\Threads\Enums\ThreadKind;
+use Splicewire\Beam\Threads\Models\Participant;
 
 /**
  * A published embed — a policied aggregate over the `threads` table (ticket 03, ADR-0118 morph-alias).
@@ -33,12 +37,68 @@ class Embed extends Model implements Conversation, Versionable
 {
     use ConversationParticle;
     use EmbedParticle;
+    use HasSidecarColumns;
 
     /**
-     * The SAME physical table as the base conversation — an Embed IS a `threads` row (of kind
-     * embed_template), not a table of its own.
+     * The SAME physical table as the base conversation — an Embed IS a `beam_threads` particle row (of kind
+     * embed_template), not a table of its own. TH-07 header migration (phase 4): the header moved onto the
+     * particle; the interactive-AI and embed/publish columns are surfaced from sidecars.
      */
-    protected $table = 'threads';
+    protected $table = 'beam_threads';
+
+    /**
+     * The sidecar column map (TH-07 header migration, phase 4). The interactive-AI config resolves off the
+     * host-bound `header` model (`config('embed.header_model')`, tower binds ThreadHeader — beam-embed never
+     * hardcodes the tower class, topology); the embed/publish config off beam-embed's own EmbedSession.
+     *
+     * @return array<string, array<int, string>>
+     */
+    public function sidecarColumnMap(): array
+    {
+        return [
+            'header' => [
+                'model',
+                'model_params',
+                'assistant_id',
+                'instructions_provider',
+                'instructions_text',
+                'instructions_schemas',
+                'tools',
+                'max_tool_steps',
+            ],
+            'embedSession' => [
+                'visitor_id',
+                'published_from_id',
+                'snapshot_config',
+                'template_version',
+                'embed_policy',
+                'retention_days',
+                'session_status',
+            ],
+        ];
+    }
+
+    /**
+     * The interactive-AI config sidecar, resolved through the host seam `config('embed.header_model')` so
+     * beam-embed never references the tower ThreadHeader class (topology). Left unset on a bare beam site,
+     * the relation resolves to an empty association.
+     */
+    public function header(): HasOne
+    {
+        return $this->hasOne(config('embed.header_model'), 'thread_id');
+    }
+
+    /** The embed/publish config sidecar (beam-embed's own EmbedSession — no topology concern). */
+    public function embedSession(): HasOne
+    {
+        return $this->hasOne(EmbedSession::class, 'thread_id');
+    }
+
+    /** The thread's participants — the beam-threads membership rows (owner resolution). */
+    public function participants(): HasMany
+    {
+        return $this->hasMany(Participant::class, 'thread_id');
+    }
 
     /** The morph alias that mints the `embed.*` token family (ADR-0118). */
     public function getMorphClass(): string

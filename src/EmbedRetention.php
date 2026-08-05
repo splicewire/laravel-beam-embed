@@ -120,7 +120,7 @@ class EmbedRetention
 
         $this->baseModel()::query()
             ->where('kind', ThreadKind::EmbedSession->value)
-            ->where('visitor_id', $visitorId)
+            ->whereHas('embedSession', fn ($q) => $q->where('visitor_id', $visitorId))
             ->get()
             ->each(function (Conversation $session) use (&$count) {
                 $count += $this->erase($session);
@@ -158,7 +158,8 @@ class EmbedRetention
 
         // Prune the visitor's PII once its last session is gone (prune / erase-by-session
         // paths); a visitor with other live sessions is left intact.
-        if ($visitorId !== null && ! $this->baseModel()::query()->where('visitor_id', $visitorId)->exists()) {
+        if ($visitorId !== null && ! $this->baseModel()::query()
+            ->whereHas('embedSession', fn ($q) => $q->where('visitor_id', $visitorId))->exists()) {
             Visitor::query()->whereKey($visitorId)->delete();
         }
 
