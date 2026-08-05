@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Embed\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Enums\ThreadKind;
 use Splicewire\Beam\Models\ChatBase;
 
@@ -72,7 +73,7 @@ class Embed extends ChatBase
      * The base class is the host's `config('embed.base_model')` (tower binds `Splicewire\Tower\Models\Thread`), with
      * a {@see ChatBase} fallback on a bare beam site (recohere T02).
      */
-    public function versionable(): ChatBase
+    public function versionable(): Conversation
     {
         /** @var class-string<ChatBase> $base */
         $base = config('embed.base_model', ChatBase::class);
@@ -90,7 +91,7 @@ class Embed extends ChatBase
      * (save / restore) freezes the real conversation config, and files it under the base morph — never
      * the `embed` permission alias, which the spawner would read as an empty lineage.
      */
-    public function versionableRecord(): ChatBase
+    public function versionableRecord(): Conversation
     {
         /** @var class-string<ChatBase> $base */
         $base = config('embed.base_model', ChatBase::class);

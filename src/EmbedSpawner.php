@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Embed;
 
 use InvalidArgumentException;
 use RuntimeException;
+use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Embed\Contracts\KnowledgePivotFreezer;
 use Splicewire\Beam\Embed\Models\Visitor;
 use Splicewire\Beam\Enums\ThreadKind;
@@ -26,7 +27,7 @@ class EmbedSpawner
 {
     public function __construct(private KnowledgePivotFreezer $freezer) {}
 
-    public function spawn(ChatBase $published, Visitor $visitor): ChatBase
+    public function spawn(Conversation $published, Visitor $visitor): Conversation
     {
         if (! $published->isPublished()) {
             throw new InvalidArgumentException('Can only spawn a session from a published (embed_template) chat.');

@@ -2,8 +2,8 @@
 
 namespace Splicewire\Beam\Embed;
 
+use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Embed\Contracts\ScopeResolver;
-use Splicewire\Beam\Models\ChatBase;
 
 /**
  * The default {@see ScopeResolver} bound on a bare beam site (recohere T02): an empty scope. A bare
@@ -16,7 +16,7 @@ class NullScopeResolver implements ScopeResolver
     /**
      * @return array{siloIds: list<string>, tagIds: list<string>}
      */
-    public function resolve(ChatBase $session): array
+    public function resolve(Conversation $session): array
     {
         return ['siloIds' => [], 'tagIds' => []];
     }

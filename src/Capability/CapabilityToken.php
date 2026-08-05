@@ -2,8 +2,8 @@
 
 namespace Splicewire\Beam\Embed\Capability;
 
-use Splicewire\Beam\Models\ChatBase;
 use Illuminate\Support\Facades\Config;
+use Splicewire\Beam\Contracts\Conversation;
 
 /**
  * The scoped capability token (RCP-05): a short-lived, audience-restricted credential
@@ -36,7 +36,7 @@ class CapabilityToken
      * Mint a signed token for a spawned session under a tier. TTL is short (default 300s)
      * — a remote block renders once; a long-lived capability credential is a liability.
      */
-    public static function mint(ChatBase $session, TrustTier $tier, string $embedKeyId, ?array $requested = null, ?int $ttlSeconds = null): self
+    public static function mint(Conversation $session, TrustTier $tier, string $embedKeyId, ?array $requested = null, ?int $ttlSeconds = null): self
     {
         $grant = CapabilityGrant::forSession($session, $tier, $embedKeyId, $requested);
         $now = time();

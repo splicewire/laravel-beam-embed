@@ -2,16 +2,16 @@
 
 namespace Splicewire\Beam\Embed;
 
+use Illuminate\Support\Facades\DB;
+use Rushing\Commerce\Credit;
 use Splicewire\Beam\Commerce\Budget\BudgetLine;
 use Splicewire\Beam\Commerce\Budget\EffectiveBudget;
 use Splicewire\Beam\Commerce\Budget\SpendContext;
 use Splicewire\Beam\Commerce\Budget\SpendingCap;
 use Splicewire\Beam\Commerce\Budget\StopKind;
 use Splicewire\Beam\Commerce\Data\BudgetVerdictData;
+use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Embed\Models\EmbedSpendReservation;
-use Splicewire\Beam\Models\ChatBase;
-use Illuminate\Support\Facades\DB;
-use Rushing\Commerce\Credit;
 
 /**
  * The public Embed path's spend authority (DIE-06 / ADR-0062 decision 6): a `pk_` is
@@ -28,7 +28,7 @@ use Rushing\Commerce\Credit;
  */
 class EmbedBudget
 {
-    public function resolve(ChatBase $published, ?string $embedKeyId): BudgetVerdictData
+    public function resolve(Conversation $published, ?string $embedKeyId): BudgetVerdictData
     {
         $policy = $published->embed_policy ?? [];
 
@@ -75,7 +75,7 @@ class EmbedBudget
      * With no prepaid wallet there is no drained balance to protect (the postpaid cap is
      * an outer ceiling), so this is a plain {@see resolve()}.
      */
-    public function reserve(ChatBase $published, ?string $embedKeyId, ?string $sessionId = null): BudgetVerdictData
+    public function reserve(Conversation $published, ?string $embedKeyId, ?string $sessionId = null): BudgetVerdictData
     {
         $policy = $published->embed_policy ?? [];
         $hasWallet = $this->walletCredit($policy) !== null && $embedKeyId !== null;

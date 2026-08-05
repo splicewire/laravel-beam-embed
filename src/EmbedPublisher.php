@@ -2,11 +2,12 @@
 
 namespace Splicewire\Beam\Embed;
 
-use Splicewire\Beam\Enums\ThreadKind;
-use Splicewire\Beam\Embed\Models\EmbedKey;
-use Splicewire\Beam\Models\ChatBase;
 use Illuminate\Support\Arr;
 use Rushing\Versioning\Models\Version;
+use Splicewire\Beam\Contracts\Conversation;
+use Splicewire\Beam\Embed\Models\EmbedKey;
+use Splicewire\Beam\Enums\ThreadKind;
+use Splicewire\Beam\Models\ChatBase;
 
 /**
  * "Publish as embed" (DIE-04 / ADR-0062): flips a ChatBase to an `embed_template`,
@@ -45,7 +46,7 @@ class EmbedPublisher
      * @return array{plaintext: string, key: EmbedKey}
      */
     public function publish(
-        ChatBase $chat,
+        Conversation $chat,
         array $allowedOrigins = [],
         ?int $retentionDays = null,
         ?float $walletCreditUsd = null,
@@ -97,7 +98,7 @@ class EmbedPublisher
      * @param  array<string, mixed>  $fields  Any of: instructions_provider, instructions_text,
      *                                        instructions_schemas, model, title, max_tool_steps.
      */
-    public function updateInstructions(ChatBase $chat, array $fields): void
+    public function updateInstructions(Conversation $chat, array $fields): void
     {
         $staged = Arr::only($fields, self::STAGED_INSTRUCTION_KEYS);
 
@@ -130,7 +131,7 @@ class EmbedPublisher
      * touch `embed_policy` (re-publishing content must never rotate the key or reset operational
      * safety). The returned {@see Version} is the freshly-minted HEAD.
      */
-    public function republish(ChatBase $chat, ?string $label = null): Version
+    public function republish(Conversation $chat, ?string $label = null): Version
     {
         $chat->update(['template_version' => ($chat->template_version ?? 0) + 1]);
 
@@ -154,7 +155,7 @@ class EmbedPublisher
      * unset and falls back to {@see ChatBase}. Loss-free because every caller persists the working row
      * *before* snapshotting.
      */
-    private function baseThread(ChatBase $chat): ChatBase
+    private function baseThread(Conversation $chat): Conversation
     {
         /** @var class-string<ChatBase> $base */
         $base = config('embed.base_model', ChatBase::class);
@@ -174,7 +175,7 @@ class EmbedPublisher
      * @param  array<string, mixed>|null  $launcher  null = leave launcher unchanged; [] clears it.
      */
     public function updateConfig(
-        ChatBase $chat,
+        Conversation $chat,
         ?array $allowedOrigins = null,
         ?float $walletCreditUsd = null,
         ?bool $enabled = null,

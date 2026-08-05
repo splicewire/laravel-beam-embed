@@ -2,9 +2,9 @@
 
 namespace Splicewire\Beam\Embed;
 
+use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Embed\Contracts\SubmissionRecorder;
 use Splicewire\Beam\Models\BeamSubmission;
-use Splicewire\Beam\Models\ChatBase;
 
 /**
  * The exit to a human (DIE-09 / ADR-0062 decision 5): "Support" reuses existing delivery infra rather
@@ -25,7 +25,7 @@ class EscalationService
     /**
      * @param  array<string, mixed>|null  $contact
      */
-    public function escalate(ChatBase $session, string $reason, ?array $contact = null, bool $consent = false): BeamSubmission
+    public function escalate(Conversation $session, string $reason, ?array $contact = null, bool $consent = false): BeamSubmission
     {
         $session->update(['session_status' => 'escalated']);
 

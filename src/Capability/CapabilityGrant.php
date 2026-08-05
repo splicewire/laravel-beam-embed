@@ -2,8 +2,8 @@
 
 namespace Splicewire\Beam\Embed\Capability;
 
+use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Embed\Contracts\ScopeResolver;
-use Splicewire\Beam\Models\ChatBase;
 
 /**
  * The explicit capability grant a scoped token carries (RCP-05): which brokered capabilities the guest
@@ -40,7 +40,7 @@ class CapabilityGrant
      *
      * @param  list<Capability>|null  $requested  narrow to these (still tier-bounded); null = the tier's full default set
      */
-    public static function forSession(ChatBase $session, TrustTier $tier, string $embedKeyId, ?array $requested = null): self
+    public static function forSession(Conversation $session, TrustTier $tier, string $embedKeyId, ?array $requested = null): self
     {
         $allowed = $tier->defaultCapabilities();
 

@@ -2,8 +2,8 @@
 
 namespace Splicewire\Beam\Embed;
 
+use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Embed\Contracts\KnowledgePivotFreezer;
-use Splicewire\Beam\Models\ChatBase;
 
 /**
  * The default {@see KnowledgePivotFreezer} bound on a bare beam site (recohere T02): a no-op. beam-core's
@@ -12,7 +12,7 @@ use Splicewire\Beam\Models\ChatBase;
  */
 class NullKnowledgePivotFreezer implements KnowledgePivotFreezer
 {
-    public function freeze(ChatBase $session, ChatBase $template): void
+    public function freeze(Conversation $session, Conversation $template): void
     {
         // No knowledge pivots on a bare beam substrate — intentionally does nothing.
     }
