@@ -2,13 +2,13 @@
 
 namespace Splicewire\Beam\Embed;
 
+use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use RuntimeException;
 use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Embed\Contracts\KnowledgePivotFreezer;
 use Splicewire\Beam\Embed\Models\Visitor;
-use Splicewire\Beam\Enums\ThreadKind;
-use Splicewire\Beam\Models\ChatBase;
+use Splicewire\Beam\Threads\Enums\ThreadKind;
 
 /**
  * Spawns a visitor-owned `embed_session` from a published template (DIE-04 / ADR-0062). The effective
@@ -20,7 +20,7 @@ use Splicewire\Beam\Models\ChatBase;
  * NOT its live working columns: an operator's unpublished edit never reaches a visitor.
  *
  * Recohere T02: the spawner is tower-ref-free. Knowledge pivots (fragments/silos/contextScopes) are
- * NOT on the generic {@see ChatBase}, so they are frozen through the injected {@see KnowledgePivotFreezer}
+ * NOT on the generic conversation particle, so they are frozen through the injected {@see KnowledgePivotFreezer}
  * port — a no-op on a bare beam site, the real tower-Thread copy when tower-embed binds its freezer.
  */
 class EmbedSpawner
@@ -36,8 +36,8 @@ class EmbedSpawner
         // Re-resolve the template as the host's BASE conversation model so the version HEAD is read off
         // the base morph (`thread` on tower), never the `embed` permission-alias lineage (recohere T02).
         // The session below is created through this same base model, so it too carries the base morph.
-        /** @var class-string<ChatBase> $base */
-        $base = config('embed.base_model', ChatBase::class);
+        /** @var class-string<Model&Conversation> $base */
+        $base = config('embed.base_model');
         if (! $published instanceof $base) {
             $published = $base::query()->findOrFail($published->getKey());
         }
@@ -64,7 +64,7 @@ class EmbedSpawner
             'tools' => $snapshot['tools'] ?? null,
         ];
 
-        /** @var ChatBase $session */
+        /** @var Conversation $session */
         $session = $published->newInstance()->newQuery()->create(array_merge($config, [
             'kind' => ThreadKind::EmbedSession,
             'user_id' => null,

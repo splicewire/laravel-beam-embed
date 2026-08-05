@@ -2,15 +2,15 @@
 
 namespace Splicewire\Beam\Embed;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Rushing\Versioning\Models\Version;
 use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Embed\Models\EmbedKey;
-use Splicewire\Beam\Enums\ThreadKind;
-use Splicewire\Beam\Models\ChatBase;
+use Splicewire\Beam\Threads\Enums\ThreadKind;
 
 /**
- * "Publish as embed" (DIE-04 / ADR-0062): flips a ChatBase to an `embed_template`,
+ * "Publish as embed" (DIE-04 / ADR-0062): flips a conversation to an `embed_template`,
  * attaches its embed policy (origin allowlist, retention, optional wallet ref), and
  * mints the central Embed Key pointer (issue 03) so the drop-in resolves back to
  * this tenant + published chat. The config IS the Chat — there is no separate Embed
@@ -79,7 +79,7 @@ class EmbedPublisher
 
         // Snapshot the conversation config as version 1 (ticket 13): this establishes the HEAD the
         // spawner reads, so a freshly-published embed serves its published copy from the first spawn
-        // (no live-fields fallback). Taken on the base ChatBase morph so the spawner can read it back.
+        // (no live-fields fallback). Taken on the base `thread` morph so the spawner can read it back.
         $this->baseThread($chat)->snapshotVersion('published');
 
         [$key, $plaintext] = EmbedKey::issue((string) tenant()?->getTenantKey(), $chat->id, $allowedOrigins, $selfDeliver);
@@ -109,7 +109,7 @@ class EmbedPublisher
 
     /**
      * The conversation-config keys the edit-instructions endpoint may stage (ticket 13, payload W3).
-     * A subset of {@see ChatBase::toVersionSnapshot()} — the operator-editable instruction fields; the
+     * A subset of the conversation particle's `toVersionSnapshot()` — the operator-editable instruction fields; the
      * heavier `model_params` / `tools` / `assistant_id` are edited through the assistant editor, not
      * this slice, but still ride the published snapshot whatever their current value.
      *
@@ -151,14 +151,15 @@ class EmbedPublisher
      *    fresh read captures the persisted state (the same footgun Composition's provision-seed hits).
      *
      * The base model is the host's base conversation class (recohere T02): `config('embed.base_model')`,
-     * which tower binds to `Splicewire\Tower\Models\Thread` so the morph stays `thread`. A bare beam site leaves it
-     * unset and falls back to {@see ChatBase}. Loss-free because every caller persists the working row
-     * *before* snapshotting.
+     * which tower binds to `Splicewire\Tower\Models\Thread` so the morph stays `thread`. TH-07 deleted the
+     * beam-core `ChatBase` fallback — the host MUST bind it (the app's `config/embed.php` always does);
+     * beam-embed never hardcodes the tower class (topology). Loss-free because every caller persists the
+     * working row *before* snapshotting.
      */
     private function baseThread(Conversation $chat): Conversation
     {
-        /** @var class-string<ChatBase> $base */
-        $base = config('embed.base_model', ChatBase::class);
+        /** @var class-string<Model&Conversation> $base */
+        $base = config('embed.base_model');
 
         return $base::query()->findOrFail($chat->getKey());
     }

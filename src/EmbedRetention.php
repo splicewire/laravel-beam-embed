@@ -2,10 +2,11 @@
 
 namespace Splicewire\Beam\Embed;
 
-use Splicewire\Beam\Enums\ThreadKind;
+use Illuminate\Database\Eloquent\Model;
+use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Embed\Models\Embed;
-use Splicewire\Beam\Models\ChatBase;
 use Splicewire\Beam\Embed\Models\Visitor;
+use Splicewire\Beam\Threads\Enums\ThreadKind;
 
 /**
  * Retention + erasure for embed sessions (DIE-11 / ADR-0062 decision 8). A public
@@ -22,13 +23,25 @@ class EmbedRetention
     public const DEFAULT_DAYS = 90;
 
     /**
+     * The host's base conversation model (TH-07): tower binds `Splicewire\Tower\Models\Thread`. beam-embed
+     * never hardcodes the tower class (topology), and TH-07 deleted the beam-core `ChatBase` fallback, so
+     * the host MUST bind it (the app's `config/embed.php` always does).
+     *
+     * @return class-string<Model&Conversation>
+     */
+    private function baseModel(): string
+    {
+        return config('embed.base_model');
+    }
+
+    /**
      * Delete every embed session (and its messages) past its retention window.
      */
     public function prune(): int
     {
         $count = 0;
 
-        $this->eachExpiredSession(function (ChatBase $session) use (&$count) {
+        $this->eachExpiredSession(function (Conversation $session) use (&$count) {
             $count += $this->erase($session);
         });
 
@@ -56,7 +69,7 @@ class EmbedRetention
      */
     private function eachExpiredSession(callable $each): void
     {
-        ChatBase::query()
+        $this->baseModel()::query()
             ->where('kind', ThreadKind::EmbedSession->value)
             ->chunkById(200, function ($sessions) use ($each) {
                 foreach ($sessions as $session) {
@@ -93,7 +106,7 @@ class EmbedRetention
     }
 
     /** Whether a session has aged past its snapshotted retention window. */
-    private function isExpired(ChatBase $session): bool
+    private function isExpired(Conversation $session): bool
     {
         $days = $session->retention_days ?? self::DEFAULT_DAYS;
 
@@ -105,11 +118,11 @@ class EmbedRetention
     {
         $count = 0;
 
-        ChatBase::query()
+        $this->baseModel()::query()
             ->where('kind', ThreadKind::EmbedSession->value)
             ->where('visitor_id', $visitorId)
             ->get()
-            ->each(function (ChatBase $session) use (&$count) {
+            ->each(function (Conversation $session) use (&$count) {
                 $count += $this->erase($session);
             });
 
@@ -123,7 +136,7 @@ class EmbedRetention
     /** Erase one session by id. */
     public function eraseBySession(string $sessionId): int
     {
-        $session = ChatBase::query()
+        $session = $this->baseModel()::query()
             ->where('kind', ThreadKind::EmbedSession->value)
             ->find($sessionId);
 
@@ -131,12 +144,12 @@ class EmbedRetention
     }
 
     /** Whether this Published Chat opted transcripts into corpus/training. Default: no. */
-    public function corpusOptIn(ChatBase $published): bool
+    public function corpusOptIn(Conversation $published): bool
     {
         return (bool) ($published->embed_policy['corpus_optin'] ?? false);
     }
 
-    private function erase(ChatBase $session): int
+    private function erase(Conversation $session): int
     {
         $visitorId = $session->visitor_id;
 
@@ -145,7 +158,7 @@ class EmbedRetention
 
         // Prune the visitor's PII once its last session is gone (prune / erase-by-session
         // paths); a visitor with other live sessions is left intact.
-        if ($visitorId !== null && ! ChatBase::query()->where('visitor_id', $visitorId)->exists()) {
+        if ($visitorId !== null && ! $this->baseModel()::query()->where('visitor_id', $visitorId)->exists()) {
             Visitor::query()->whereKey($visitorId)->delete();
         }
 

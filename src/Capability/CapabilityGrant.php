@@ -13,7 +13,7 @@ use Splicewire\Beam\Embed\Contracts\ScopeResolver;
  * re-mint a session.
  *
  * Recohere T02: the scope is no longer read off a tower ContextScope relation directly (that relation is
- * UP on the tower Thread, absent from the generic {@see ChatBase}). It is resolved through the injected
+ * UP on the tower Thread, absent from the generic conversation particle). It is resolved through the injected
  * {@see ScopeResolver} port — empty on a bare beam site, the real ContextScope union when tower-embed
  * binds its resolver.
  */
