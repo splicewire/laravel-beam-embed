@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Rushing\Versioning\Models\Version;
 use Splicewire\Beam\Contracts\Conversation;
+use Splicewire\Beam\Embed\Models\BaseThread;
 use Splicewire\Beam\Embed\Models\EmbedKey;
 use Splicewire\Beam\Threads\Enums\ThreadKind;
 
@@ -158,10 +159,10 @@ class EmbedPublisher
      */
     private function baseThread(Conversation $chat): Conversation
     {
-        /** @var class-string<Model&Conversation> $base */
-        $base = config('embed.base_model');
-
-        return $base::query()->findOrFail($chat->getKey());
+        // TH-08 phase 5 (B2): the former `config('embed.base_model')` host seam is retired for beam-embed's
+        // own {@see BaseThread} — the same `beam_threads` row under the base `thread` morph, carrying the full
+        // working config off the sidecars (topology-clean: no tower reference).
+        return BaseThread::query()->findOrFail($chat->getKey());
     }
 
     /**

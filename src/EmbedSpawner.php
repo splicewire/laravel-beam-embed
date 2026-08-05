@@ -7,6 +7,7 @@ use InvalidArgumentException;
 use RuntimeException;
 use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Embed\Contracts\KnowledgePivotFreezer;
+use Splicewire\Beam\Embed\Models\BaseThread;
 use Splicewire\Beam\Embed\Models\Visitor;
 use Splicewire\Beam\Threads\Enums\ParticipantRole;
 use Splicewire\Beam\Threads\Enums\ThreadKind;
@@ -35,11 +36,12 @@ class EmbedSpawner
             throw new InvalidArgumentException('Can only spawn a session from a published (embed_template) chat.');
         }
 
-        // Re-resolve the template as the host's BASE conversation model so the version HEAD is read off
-        // the base morph (`thread` on tower), never the `embed` permission-alias lineage (recohere T02).
-        // The session below is created through this same base model, so it too carries the base morph.
+        // Re-resolve the template as the BASE conversation model ({@see BaseThread}) so the version HEAD is
+        // read off the base `thread` morph, never the `embed` permission-alias lineage. The session below is
+        // created through this same base model, so it too carries the base morph. TH-08 phase 5 (B2): the
+        // former `config('embed.base_model')` host seam is retired for beam-embed's own base-morph model.
         /** @var class-string<Model&Conversation> $base */
-        $base = config('embed.base_model');
+        $base = BaseThread::class;
         if (! $published instanceof $base) {
             $published = $base::query()->findOrFail($published->getKey());
         }
