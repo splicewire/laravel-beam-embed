@@ -5,6 +5,8 @@ namespace Splicewire\Beam\Embed;
 use Splicewire\Beam\Contracts\Conversation;
 use Splicewire\Beam\Embed\Contracts\SubmissionRecorder;
 use Splicewire\Beam\Models\BeamSubmission;
+use Splicewire\Beam\Threads\Enums\ParticipantKind;
+use Splicewire\Beam\Threads\Models\Message;
 
 /**
  * The exit to a human (DIE-09 / ADR-0062 decision 5): "Support" reuses existing delivery infra rather
@@ -29,8 +31,20 @@ class EscalationService
     {
         $session->update(['session_status' => 'escalated']);
 
-        $transcript = $session->messages()->get()
-            ->map(fn ($m) => ['role' => $m->role, 'content' => $m->content_text])
+        // TH-08 message-layer cutover: the transcript reads the substrate {@see Message} particle — role is
+        // DERIVED from the author participant's kind (the substrate carries no `role` column; authorship is
+        // the participant), and content is the coalesced-text accessor (no `content_text` column).
+        $transcript = $session->messages()->with('participant')->get()
+            ->map(fn (Message $m) => [
+                'role' => match ($m->participant?->kind instanceof ParticipantKind
+                    ? $m->participant->kind
+                    : ParticipantKind::tryFrom((string) $m->participant?->kind)) {
+                    ParticipantKind::Human => 'user',
+                    ParticipantKind::Agent => 'assistant',
+                    default => 'system',
+                },
+                'content' => (string) $m->content,
+            ])
             ->all();
 
         $payload = ['reason' => $reason, 'transcript' => $transcript];
