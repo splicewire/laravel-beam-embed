@@ -2,7 +2,7 @@
 
 namespace Splicewire\Beam\Embed;
 
-use Splicewire\Beam\Contracts\Conversation;
+use Splicewire\Beam\Threads\Contracts\Conversation;
 use Splicewire\Beam\Embed\Contracts\SubmissionRecorder;
 use Splicewire\Beam\Models\BeamSubmission;
 use Splicewire\Beam\Threads\Enums\ParticipantKind;

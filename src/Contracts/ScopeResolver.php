@@ -2,7 +2,7 @@
 
 namespace Splicewire\Beam\Embed\Contracts;
 
-use Splicewire\Beam\Contracts\Conversation;
+use Splicewire\Beam\Threads\Contracts\Conversation;
 use Splicewire\Beam\Embed\Capability\CapabilityGrant;
 use Splicewire\Beam\Embed\NullScopeResolver;
 

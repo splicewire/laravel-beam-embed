@@ -5,7 +5,7 @@ namespace Splicewire\Beam\Embed;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use RuntimeException;
-use Splicewire\Beam\Contracts\Conversation;
+use Splicewire\Beam\Threads\Contracts\Conversation;
 use Splicewire\Beam\Embed\Contracts\KnowledgePivotFreezer;
 use Splicewire\Beam\Embed\Models\BaseThread;
 use Splicewire\Beam\Embed\Models\Visitor;

@@ -3,7 +3,7 @@
 namespace Splicewire\Beam\Embed\Capability;
 
 use Illuminate\Support\Facades\Config;
-use Splicewire\Beam\Contracts\Conversation;
+use Splicewire\Beam\Threads\Contracts\Conversation;
 
 /**
  * The scoped capability token (RCP-05): a short-lived, audience-restricted credential

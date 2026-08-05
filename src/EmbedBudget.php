@@ -10,7 +10,7 @@ use Splicewire\Beam\Commerce\Budget\SpendContext;
 use Splicewire\Beam\Commerce\Budget\SpendingCap;
 use Splicewire\Beam\Commerce\Budget\StopKind;
 use Splicewire\Beam\Commerce\Data\BudgetVerdictData;
-use Splicewire\Beam\Contracts\Conversation;
+use Splicewire\Beam\Threads\Contracts\Conversation;
 use Splicewire\Beam\Embed\Models\EmbedSpendReservation;
 
 /**

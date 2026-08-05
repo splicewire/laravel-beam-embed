@@ -3,7 +3,7 @@
 namespace Splicewire\Beam\Embed;
 
 use Illuminate\Database\Eloquent\Model;
-use Splicewire\Beam\Contracts\Conversation;
+use Splicewire\Beam\Threads\Contracts\Conversation;
 use Splicewire\Beam\Embed\Models\BaseThread;
 use Splicewire\Beam\Embed\Models\Embed;
 use Splicewire\Beam\Embed\Models\Visitor;

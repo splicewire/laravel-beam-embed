@@ -5,7 +5,7 @@ namespace Splicewire\Beam\Embed;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Rushing\Versioning\Models\Version;
-use Splicewire\Beam\Contracts\Conversation;
+use Splicewire\Beam\Threads\Contracts\Conversation;
 use Splicewire\Beam\Embed\Models\BaseThread;
 use Splicewire\Beam\Embed\Models\EmbedKey;
 use Splicewire\Beam\Threads\Enums\ThreadKind;
