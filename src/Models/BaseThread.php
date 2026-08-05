@@ -39,8 +39,14 @@ class BaseThread extends Model implements Conversation, Versionable
     use EmbedParticle;
     use HasSidecarColumns;
 
-    /** The SAME physical particle table as the Embed / tower Thread header (shared id). */
-    protected $table = 'beam_threads';
+    /**
+     * The SAME physical particle table as the Embed / tower Thread header (shared id). The table name is the
+     * config seam (TH-08 phase 5 B3 renamed it to the canonical unprefixed `threads`).
+     */
+    public function getTable(): string
+    {
+        return config('beam.threads.tables.threads', 'threads');
+    }
 
     /**
      * The sidecar column map — identical to {@see Embed::sidecarColumnMap()} so the version snapshot carries

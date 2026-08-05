@@ -40,11 +40,15 @@ class Embed extends Model implements Conversation, Versionable
     use HasSidecarColumns;
 
     /**
-     * The SAME physical table as the base conversation — an Embed IS a `beam_threads` particle row (of kind
+     * The SAME physical table as the base conversation — an Embed IS a conversation particle row (of kind
      * embed_template), not a table of its own. TH-07 header migration (phase 4): the header moved onto the
-     * particle; the interactive-AI and embed/publish columns are surfaced from sidecars.
+     * particle; the interactive-AI and embed/publish columns are surfaced from sidecars. The table name is
+     * the config seam (TH-08 phase 5 B3 renamed it to the canonical unprefixed `threads`).
      */
-    protected $table = 'beam_threads';
+    public function getTable(): string
+    {
+        return config('beam.threads.tables.threads', 'threads');
+    }
 
     /**
      * The sidecar column map (TH-07 header migration, phase 4). The interactive-AI config resolves off the
