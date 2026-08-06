@@ -63,7 +63,7 @@ class Embed extends Model implements Conversation, Versionable
             'header' => [
                 'model',
                 'model_params',
-                'assistant_id',
+                'agent_id',
                 'instructions_provider',
                 'instructions_text',
                 'instructions_schemas',

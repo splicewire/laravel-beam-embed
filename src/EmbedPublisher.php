@@ -111,7 +111,7 @@ class EmbedPublisher
     /**
      * The conversation-config keys the edit-instructions endpoint may stage (ticket 13, payload W3).
      * A subset of the conversation particle's `toVersionSnapshot()` — the operator-editable instruction fields; the
-     * heavier `model_params` / `tools` / `assistant_id` are edited through the assistant editor, not
+     * heavier `model_params` / `tools` / `agent_id` are edited through the agent editor, not
      * this slice, but still ride the published snapshot whatever their current value.
      *
      * @var list<string>

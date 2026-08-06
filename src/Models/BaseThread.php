@@ -25,7 +25,7 @@ use Splicewire\Beam\Threads\Models\Thread;
  * Both are now satisfied WITHOUT referencing tower (topology): this model is the SAME `beam_threads` row
  * (shared id) and composes the SAME sidecar traits as {@see Embed} — {@see ConversationParticle} (whose
  * `toVersionSnapshot()` freezes the interactive-AI config) + {@see EmbedParticle} + {@see HasSidecarColumns}
- * with the same {@see sidecarColumnMap()} — so it reads model / instructions / assistant / tools off the
+ * with the same {@see sidecarColumnMap()} — so it reads model / instructions / agent / tools off the
  * `thread_headers` sidecar ITSELF. It is beam-embed-owned, so no beam-embed → tower edge is introduced.
  *
  * Unlike {@see Embed}, it declares NO `embed`-alias `getMorphClass()` (it IS the base `thread` morph) and NO
@@ -61,7 +61,7 @@ class BaseThread extends Model implements Conversation, Versionable
             'header' => [
                 'model',
                 'model_params',
-                'assistant_id',
+                'agent_id',
                 'instructions_provider',
                 'instructions_text',
                 'instructions_schemas',
