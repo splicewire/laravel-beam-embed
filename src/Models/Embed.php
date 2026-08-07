@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 use Rushing\Versioning\Contracts\Versionable;
-use Splicewire\Beam\Threads\Contracts\Conversation;
+use Splicewire\Beam\Beam;
 use Splicewire\Beam\Threads\Concerns\ConversationParticle;
 use Splicewire\Beam\Threads\Concerns\EmbedParticle;
 use Splicewire\Beam\Threads\Concerns\HasSidecarColumns;
+use Splicewire\Beam\Threads\Contracts\Conversation;
 use Splicewire\Beam\Threads\Enums\ThreadKind;
 use Splicewire\Beam\Threads\Models\Participant;
 
@@ -47,7 +48,7 @@ class Embed extends Model implements Conversation, Versionable
      */
     public function getTable(): string
     {
-        return config('beam.threads.tables.threads', 'threads');
+        return config('beam.threads.tables.threads', Beam::table('threads'));
     }
 
     /**
