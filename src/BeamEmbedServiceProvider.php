@@ -2,16 +2,19 @@
 
 namespace Splicewire\Beam\Embed;
 
-use Illuminate\Support\ServiceProvider;
+use Spatie\LaravelPackageTools\Package;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Splicewire\Beam\Doctor\BeamDoctorManifest;
 use Splicewire\Beam\Embed\Capability\CapabilityBroker;
 use Splicewire\Beam\Embed\Contracts\CapabilityAuditRecorder;
 use Splicewire\Beam\Embed\Contracts\KnowledgePivotFreezer;
 use Splicewire\Beam\Embed\Contracts\ScopeResolver;
 use Splicewire\Beam\Embed\Contracts\SubmissionRecorder;
+use Splicewire\Beam\Embed\Doctor\BeamEmbedMigrationsAudit;
 use Splicewire\Beam\Embed\Types\EmbedType;
 use Splicewire\Beam\Embed\Types\EmbedTypeRegistry;
 use Splicewire\Beam\Embed\Types\GenericEmbedType;
-use Splicewire\Beam\Workflows\BeamWorkflowsServiceProvider;
+use Splicewire\Beam\Install\BeamInstallManifest;
 
 /**
  * The generic embed subsystem provider (recohere T02; generalized T30). Binds the NO-OP / default
@@ -26,10 +29,33 @@ use Splicewire\Beam\Workflows\BeamWorkflowsServiceProvider;
  * {@see EmbedTypeRegistry} singleton with the {@see GenericEmbedType} default (deny-by-default handlers);
  * the generic {@see CapabilityBroker} dispatches to the ACTIVE type's
  * handlers, and audits through the {@see CapabilityAuditRecorder} port.
+ *
+ * beam-embed's TENANT tables (`embed_spend_reservations`, `embed_capability_audits`, `embed_sessions`)
+ * ship as PUBLISH-ONLY spatie/laravel-package-tools stubs — the idiomatic pattern for a
+ * PackageServiceProvider. `runsMigrations` stays FALSE, so beam-embed never loads them at runtime;
+ * `vendor:publish --tag=beam-embed-migrations` re-stamps + sequences timestamped copies into the HOST's
+ * `database/migrations/tenant/` at install time, which the host's Stancl tenant pass runs. None of these
+ * three tables is ubiquitous (no central pass, no `tenant/` twin needed) — each ships as ONE stub already
+ * living under `database/migrations/tenant/`, registered via `->hasMigrations([...])` in
+ * {@see self::configurePackage()}.
  */
-class BeamEmbedServiceProvider extends ServiceProvider
+class BeamEmbedServiceProvider extends PackageServiceProvider
 {
-    public function register(): void
+    public function configurePackage(Package $package): void
+    {
+        $package
+            ->name('laravel-beam-embed')
+            // TENANT-ONLY leaf tables (no central pass, no flat twin): each stub already lives under
+            // database/migrations/tenant/, and `hasMigrations([...])` publishes it there re-stamped to
+            // the install moment. Declared order matches the original timestamp order.
+            ->hasMigrations([
+                'tenant/create_embed_spend_reservations_table',
+                'tenant/create_embed_capability_audit_table',
+                'tenant/create_embed_sessions_table',
+            ]);
+    }
+
+    public function packageRegistered(): void
     {
         $this->app->bind(KnowledgePivotFreezer::class, NullKnowledgePivotFreezer::class);
         $this->app->bind(ScopeResolver::class, NullScopeResolver::class);
@@ -44,42 +70,29 @@ class BeamEmbedServiceProvider extends ServiceProvider
         });
     }
 
-    public function boot(): void
+    public function packageBooted(): void
     {
-        // Routes/controllers/config stay with the host (tower-embed); the embed-OWNED tenant
-        // migrations are published from here (see bootMigrations()).
-        if ($this->app->runningInConsole()) {
-            $this->bootMigrations();
-        }
-    }
+        // Routes/controllers/config stay with the host (tower-embed); the embed-OWNED tenant migrations
+        // publish via configurePackage()'s ->hasMigrations([...]) above.
 
-    /**
-     * PUBLISH-ONLY tenant migrations — the idiomatic pattern for a PLAIN ServiceProvider, mirroring
-     * the beam-workflows exemplar (commit 994aba1). Undo of the recohere runtime `--path` push.
-     *
-     * A plain provider has no spatie/laravel-package-tools machinery, so this uses Laravel's native
-     * {@see ServiceProvider::publishesMigrations()} (Laravel 11+). It does NOT loadMigrationsFrom and
-     * does NOT push onto `tenancy.migration_parameters.--path`: the package never runs these at
-     * runtime. `vendor:publish --tag=beam-embed-migrations` drops the copies into the HOST's
-     * `database/migrations/tenant/`, and the host's Stancl tenant pass runs them.
-     *
-     * TENANT-ONLY. `embed_spend_reservations` (prepaid-wallet holds, DIE-12) and
-     * `embed_capability_audits` (brokered-capability audit trail, RCP-05) are both written on the
-     * current tenant connection — tenancy is already initialized (InitializeTenancyByEmbedKey) before
-     * either table is touched — so they publish ONLY into `database/migrations/tenant/`: there is NO
-     * flat/central twin (that would wrongly create these tables in the central schema) and no
-     * `Schema::hasTable()` dup-guard (that guard is only for a ubiquitous table's tenant twin; these
-     * leaf tables have no central pass to collide with).
-     *
-     * The publishable source files carry their own valid timestamp prefix and ship as plain `.php`.
-     * With `database.migrations.update_date_on_publish` at its default (false), native
-     * `publishesMigrations` copies each file verbatim — one correctly-timestamped migration per table,
-     * no double-stamp.
-     */
-    protected function bootMigrations(): void
-    {
-        $this->publishesMigrations([
-            __DIR__.'/../database/migrations/tenant' => $this->app->databasePath('migrations/tenant'),
-        ], 'beam-embed-migrations');
+        // beam-embed self-registers its own install step DOWN into beam-core's install manifest, same
+        // as any other beam-* package — the publish-only tenant migration stubs.
+        if ($this->app->bound(BeamInstallManifest::class)) {
+            $this->app->make(BeamInstallManifest::class)->register(
+                package: 'splicewire/laravel-beam-embed',
+                publishTags: ['beam-embed-migrations'],
+                migrates: true,
+            );
+        }
+
+        // beam-embed is itself an "operator" of the estate-wide publish-only stub migrations convention
+        // (BeamServiceProvider docblock, laravel-beam) — self-registers the doctor/operator check on ITS
+        // OWN migrations, same as every other beam-* package registers it on theirs.
+        if ($this->app->bound(BeamDoctorManifest::class)) {
+            $this->app->make(BeamDoctorManifest::class)->register(
+                'splicewire/laravel-beam-embed',
+                BeamEmbedMigrationsAudit::class,
+            );
+        }
     }
 }

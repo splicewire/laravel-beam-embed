@@ -10,9 +10,12 @@ use Illuminate\Support\Facades\Schema;
  * particle. One row per embed template/session, keyed by `thread_id` (PK) = the particle id (the
  * companion-by-id pattern): the substrate Thread's id IS the embed-session id.
  *
- * PUBLISH-ONLY, TENANT-scoped: like the other beam-embed tenant tables, this ships publishable
- * (`vendor:publish --tag=beam-embed-migrations`) and the HOST's Stancl tenant pass runs it. It never runs at
- * package runtime and has no central twin.
+ * PUBLISH-ONLY, TENANT-scoped: like the other beam-embed tenant tables, this ships as a publish-only
+ * spatie/laravel-package-tools stub (`runsMigrations` FALSE) — a timestamp-less `.php.stub` registered
+ * via `configurePackage()`'s `->hasMigrations([...])`, re-stamped + sequenced into the host at install
+ * time (`vendor:publish --tag=beam-embed-migrations`), landing it in the host's
+ * `database/migrations/tenant/`, where the host's Stancl tenant pass runs it. It never runs at package
+ * runtime (no loadMigrationsFrom) and has no central twin.
  *
  * COLUMN SHAPE — the embed-only fields the conversation used to carry inline on `threads`:
  *   - `thread_id` (uuid PK, = the particle id) — the companion pointer

@@ -14,6 +14,13 @@ use Illuminate\Support\Facades\Schema;
  * The row is written on the current tenant connection (tenancy is already initialized
  * by InitializeTenancyByEmbedKey before the broker runs), keeping the audit with the
  * tenant that owns the published chat.
+ *
+ * Shipped as a publish-only spatie/laravel-package-tools stub (`runsMigrations` FALSE): the
+ * package publishes this timestamp-less `.php.stub` via `configurePackage()`'s
+ * `->hasMigrations([...])`, which re-stamps + sequences it into the host at install time
+ * (`vendor:publish --tag=beam-embed-migrations`), landing it in the host's
+ * `database/migrations/tenant/`, where the host's Stancl tenant pass runs it. beam-embed never
+ * loadMigrationsFrom's it. TENANT-ONLY — no flat/central twin.
  */
 return new class extends Migration
 {

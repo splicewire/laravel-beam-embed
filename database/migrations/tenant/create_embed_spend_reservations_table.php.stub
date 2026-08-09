@@ -11,6 +11,14 @@ use Illuminate\Support\Facades\Schema;
  * of them bills. The EmbedUsageMeter counts active (non-expired) reservations against
  * the wallet; a reservation is settled (deleted) when its stream completes, and
  * auto-expires if the stream crashes.
+ *
+ * Shipped as a publish-only spatie/laravel-package-tools stub (`runsMigrations` FALSE): the
+ * package publishes this timestamp-less `.php.stub` via `configurePackage()`'s
+ * `->hasMigrations([...])`, which re-stamps + sequences it into the host at install time
+ * (`vendor:publish --tag=beam-embed-migrations`), landing it in the host's
+ * `database/migrations/tenant/`, where the host's Stancl tenant pass runs it. beam-embed never
+ * loadMigrationsFrom's it. TENANT-ONLY — no flat/central twin (this table is written on the
+ * current tenant connection, tenancy already initialized by InitializeTenancyByEmbedKey).
  */
 return new class extends Migration
 {
