@@ -42,7 +42,8 @@ class BaseThread extends Model implements Conversation, Versionable
 
     /**
      * The SAME physical particle table as the Embed / tower Thread header (shared id). The table name is the
-     * config seam (TH-08 phase 5 B3 renamed it to the canonical unprefixed `threads`).
+     * config seam — PREFIXED like every other beam particle (routed through {@see Beam::table()}), never
+     * renamed unprefixed.
      */
     public function getTable(): string
     {

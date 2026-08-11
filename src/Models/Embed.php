@@ -44,7 +44,8 @@ class Embed extends Model implements Conversation, Versionable
      * The SAME physical table as the base conversation — an Embed IS a conversation particle row (of kind
      * embed_template), not a table of its own. TH-07 header migration (phase 4): the header moved onto the
      * particle; the interactive-AI and embed/publish columns are surfaced from sidecars. The table name is
-     * the config seam (TH-08 phase 5 B3 renamed it to the canonical unprefixed `threads`).
+     * the config seam — PREFIXED like every other beam particle (routed through {@see Beam::table()}),
+     * never renamed unprefixed.
      */
     public function getTable(): string
     {
