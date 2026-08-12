@@ -143,12 +143,12 @@ class Embed extends Model implements Conversation, Versionable
      * empty `embed` lineage. Carries only the key + HEAD pin. (A version WRITE additionally needs the
      * full working columns, so publishing re-resolves a full base model from the persisted row.)
      *
-     * TH-08 phase 5 (B2): the base class is beam-embed's own {@see BaseThread} (same beam_threads row, base
+     * TH-08 phase 5 (B2): the base class is beam-embed's own {@see Thread} (same beam_threads row, base
      * `thread` morph, config off the sidecars) — the `config('embed.base_model')` host seam is retired.
      */
     public function versionable(): Conversation
     {
-        // TH-08 phase 5 (B2): beam-embed's own base-morph {@see BaseThread} (the same beam_threads row under
+        // TH-08 phase 5 (B2): beam-embed's own base-morph {@see Thread} (the same beam_threads row under
         // the `thread` morph), replacing the retired `config('embed.base_model')` host seam.
         return (new Thread)->forceFill([
             $this->getKeyName() => $this->getKey(),
@@ -165,7 +165,7 @@ class Embed extends Model implements Conversation, Versionable
      */
     public function versionableRecord(): Conversation
     {
-        // TH-08 phase 5 (B2): beam-embed's own base-morph {@see BaseThread}, replacing the retired
+        // TH-08 phase 5 (B2): beam-embed's own base-morph {@see Thread}, replacing the retired
         // `config('embed.base_model')` host seam. Files versions under the base `thread` morph (never `embed`).
         return Thread::query()->findOrFail($this->getKey());
     }
