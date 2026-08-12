@@ -7,7 +7,7 @@ use InvalidArgumentException;
 use RuntimeException;
 use Splicewire\Beam\Threads\Contracts\Conversation;
 use Splicewire\Beam\Embed\Contracts\KnowledgePivotFreezer;
-use Splicewire\Beam\Embed\Models\BaseThread;
+use Splicewire\Beam\Embed\Models\Thread;
 use Splicewire\Beam\Embed\Models\Visitor;
 use Splicewire\Beam\Threads\Enums\ParticipantRole;
 use Splicewire\Beam\Threads\Enums\ThreadKind;
@@ -41,7 +41,7 @@ class EmbedSpawner
         // created through this same base model, so it too carries the base morph. TH-08 phase 5 (B2): the
         // former `config('embed.base_model')` host seam is retired for beam-embed's own base-morph model.
         /** @var class-string<Model&Conversation> $base */
-        $base = BaseThread::class;
+        $base = Thread::class;
         if (! $published instanceof $base) {
             $published = $base::query()->findOrFail($published->getKey());
         }

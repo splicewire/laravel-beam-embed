@@ -4,7 +4,7 @@ namespace Splicewire\Beam\Embed;
 
 use Illuminate\Database\Eloquent\Model;
 use Splicewire\Beam\Threads\Contracts\Conversation;
-use Splicewire\Beam\Embed\Models\BaseThread;
+use Splicewire\Beam\Embed\Models\Thread;
 use Splicewire\Beam\Embed\Models\Embed;
 use Splicewire\Beam\Embed\Models\Visitor;
 use Splicewire\Beam\Threads\Enums\ThreadKind;
@@ -34,7 +34,7 @@ class EmbedRetention
     {
         // TH-08 phase 5 (B2): retired the `config('embed.base_model')` host seam for beam-embed's own
         // {@see BaseThread} (base `thread` morph over the same `beam_threads` row; topology-clean).
-        return BaseThread::class;
+        return Thread::class;
     }
 
     /**

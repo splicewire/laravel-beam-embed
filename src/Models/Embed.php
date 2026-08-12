@@ -150,7 +150,7 @@ class Embed extends Model implements Conversation, Versionable
     {
         // TH-08 phase 5 (B2): beam-embed's own base-morph {@see BaseThread} (the same beam_threads row under
         // the `thread` morph), replacing the retired `config('embed.base_model')` host seam.
-        return (new BaseThread)->forceFill([
+        return (new Thread)->forceFill([
             $this->getKeyName() => $this->getKey(),
             'head_version' => $this->head_version,
         ]);
@@ -167,7 +167,7 @@ class Embed extends Model implements Conversation, Versionable
     {
         // TH-08 phase 5 (B2): beam-embed's own base-morph {@see BaseThread}, replacing the retired
         // `config('embed.base_model')` host seam. Files versions under the base `thread` morph (never `embed`).
-        return BaseThread::query()->findOrFail($this->getKey());
+        return Thread::query()->findOrFail($this->getKey());
     }
 
     /** The current live (non-revoked) key for this embed — the one serving traffic. Newest wins. */

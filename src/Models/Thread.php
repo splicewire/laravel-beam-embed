@@ -33,7 +33,7 @@ use Splicewire\Beam\Threads\Models\Participant;
  *
  * House style: NO `final`, NO `readonly`, NO `declare(strict_types=1)`.
  */
-class BaseThread extends Model implements Conversation, Versionable
+class Thread extends Model implements Conversation, Versionable
 {
     use ConversationParticle;
     use EmbedParticle;
