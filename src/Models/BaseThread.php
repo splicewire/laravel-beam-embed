@@ -12,7 +12,6 @@ use Splicewire\Beam\Threads\Concerns\EmbedParticle;
 use Splicewire\Beam\Threads\Concerns\HasSidecarColumns;
 use Splicewire\Beam\Threads\Contracts\Conversation;
 use Splicewire\Beam\Threads\Models\Participant;
-use Splicewire\Beam\Threads\Models\Thread;
 
 /**
  * The BASE-morph conversation view of an embed row (TH-07/TH-08 phase 5, B2) — beam-embed's OWN replacement
