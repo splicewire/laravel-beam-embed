@@ -18,6 +18,12 @@ class EmbedKey extends Model
 {
     use HasUuids;
 
+    /**
+     * @central-floor auth — a `pk_` bearer credential resolved BEFORE tenancy initializes: the
+     * key that selects the tenant cannot live behind the schema it selects (the bootstrap
+     * paradox). Pointer-only and hash-first — the Published Chat config itself stays
+     * tenant-schema.
+     */
     protected $connection = 'central';
 
     protected $table = 'embed_keys';
