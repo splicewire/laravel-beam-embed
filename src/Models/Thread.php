@@ -46,7 +46,7 @@ class Thread extends Model implements Conversation, Versionable
      */
     public function getTable(): string
     {
-        return config('beam.threads.tables.threads', Beam::table('threads'));
+        return Beam::tableFor('beam.threads.tables.threads', 'threads');
     }
 
     /**
