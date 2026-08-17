@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 use Rushing\Versioning\Contracts\Versionable;
-use Splicewire\Beam\Beam;
+use Splicewire\Beam\Facades\Beam;
 use Splicewire\Beam\Threads\Concerns\ConversationParticle;
 use Splicewire\Beam\Threads\Concerns\EmbedParticle;
 use Splicewire\Beam\Threads\Concerns\HasSidecarColumns;
