@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Splicewire\Beam\Schema\ConvergentTable;
 
 /**
  * Brokered-capability audit trail (RCP-05): every capability an isolated remote guest
@@ -26,17 +27,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('embed_capability_audits', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('embed_key_id')->index();
-            $table->uuid('session_id')->nullable()->index();
-            $table->string('capability')->index();
-            $table->string('tier');
-            $table->boolean('allowed');
-            $table->string('refusal_reason')->nullable();
-            $table->json('request')->nullable();
-            $table->timestamps();
-        });
+        ConvergentTable::named('embed_capability_audits')
+            ->define(function (Blueprint $table) {
+                $table->uuid('id')->primary();
+                $table->string('embed_key_id')->index();
+                $table->uuid('session_id')->nullable()->index();
+                $table->string('capability')->index();
+                $table->string('tier');
+                $table->boolean('allowed');
+                $table->string('refusal_reason')->nullable();
+                $table->json('request')->nullable();
+                $table->timestamps();
+            })
+            ->assert();
     }
 
     public function down(): void

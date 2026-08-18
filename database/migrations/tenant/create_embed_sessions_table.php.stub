@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Splicewire\Beam\Schema\ConvergentTable;
 
 /**
  * The `embed_sessions` sidecar (TH-07 header migration, phase 3) — the EMBED/PUBLISH facet of a conversation,
@@ -31,21 +32,23 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('embed_sessions', function (Blueprint $table) {
-            // The companion pointer AND primary key — an embed-session row shares the particle's id.
-            $table->uuid('thread_id')->primary();
+        ConvergentTable::named('embed_sessions')
+            ->define(function (Blueprint $table) {
+                // The companion pointer AND primary key — an embed-session row shares the particle's id.
+                $table->uuid('thread_id')->primary();
 
-            $table->uuid('visitor_id')->nullable()->index();
-            $table->uuid('published_from_id')->nullable()->index();
+                $table->uuid('visitor_id')->nullable()->index();
+                $table->uuid('published_from_id')->nullable()->index();
 
-            $table->json('snapshot_config')->nullable();
-            $table->unsignedInteger('template_version')->nullable();
-            $table->json('embed_policy')->nullable();
-            $table->unsignedInteger('retention_days')->nullable();
-            $table->string('session_status')->nullable();
+                $table->json('snapshot_config')->nullable();
+                $table->unsignedInteger('template_version')->nullable();
+                $table->json('embed_policy')->nullable();
+                $table->unsignedInteger('retention_days')->nullable();
+                $table->string('session_status')->nullable();
 
-            $table->timestamps();
-        });
+                $table->timestamps();
+            })
+            ->assert();
     }
 
     public function down(): void
