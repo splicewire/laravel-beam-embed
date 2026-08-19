@@ -13,7 +13,8 @@
         "splicewire/laravel-beam": "*",
         "splicewire/laravel-beam-commerce": "*",
         "splicewire/laravel-beam-tenancy": "*",
-        "splicewire/laravel-beam-threads": "*"
+        "splicewire/laravel-beam-threads": "*",
+        "rushing/laravel-schema-convergence": "*"
     },
     "require-dev": {
         "laravel/pint": "^1.0",
