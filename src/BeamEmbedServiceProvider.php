@@ -11,7 +11,6 @@ use Splicewire\Beam\Embed\Capability\CapabilityBroker;
 use Splicewire\Beam\Embed\Contracts\CapabilityAuditRecorder;
 use Splicewire\Beam\Embed\Contracts\KnowledgePivotFreezer;
 use Splicewire\Beam\Embed\Contracts\ScopeResolver;
-use Splicewire\Beam\Embed\Contracts\SubmissionRecorder;
 use Splicewire\Beam\Embed\Doctor\BeamEmbedMigrationsAudit;
 use Splicewire\Beam\Embed\Models\Embed;
 use Splicewire\Beam\Embed\Policies\EmbedPolicy;
@@ -63,7 +62,6 @@ class BeamEmbedServiceProvider extends PackageServiceProvider
     {
         $this->app->bind(KnowledgePivotFreezer::class, NullKnowledgePivotFreezer::class);
         $this->app->bind(ScopeResolver::class, NullScopeResolver::class);
-        $this->app->bind(SubmissionRecorder::class, NullSubmissionRecorder::class);
         $this->app->bind(CapabilityAuditRecorder::class, DefaultCapabilityAuditRecorder::class);
 
         $this->app->singleton(EmbedTypeRegistry::class, function () {

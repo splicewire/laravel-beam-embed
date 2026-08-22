@@ -3,8 +3,8 @@
 namespace Splicewire\Beam\Embed;
 
 use Splicewire\Beam\Threads\Contracts\Conversation;
-use Splicewire\Beam\Embed\Contracts\SubmissionRecorder;
 use Splicewire\Beam\Models\BeamSubmission;
+use Splicewire\Beam\Submissions\RecordsSubmissions;
 use Splicewire\Beam\Threads\Enums\ParticipantKind;
 use Splicewire\Beam\Threads\Models\Message;
 
@@ -17,12 +17,21 @@ use Splicewire\Beam\Threads\Models\Message;
  * (a {@see BeamSubmission} whose persist emits BeamParticlePersisted, delivered by the tenant's chosen
  * intent). The Embed Session's status flips to `escalated` and the handoff is recorded.
  *
- * Recohere T02: the handoff write is inverted behind the {@see SubmissionRecorder} port — a plain
- * BeamSubmission on a bare beam site, the full tower RecordsSubmissions path when tower-embed binds it.
+ * The handoff write rides beam-core's {@see RecordsSubmissions} directly — the same capture path a
+ * public intake door takes, so the write goes through {@see \Splicewire\Beam\Write\ParticleWriter} and
+ * emits `BeamParticlePersisted`, the one post-persist signal every beam write path shares.
+ *
+ * It used to sit behind a `SubmissionRecorder` inversion port (recohere T02), whose bare-site default
+ * saved the model straight through. That port is deleted (beam-facade ticket 63): its justification was
+ * that the real orchestrator was unreachable from here, ticket 49 removed that obstacle, and the two
+ * surviving implementations then differed in exactly one thing — whether the write emitted. Emitting is
+ * not a host policy, and the bare-site default's own docblock claimed it emitted on save, which was
+ * never true: nothing observes model save, only `EmitStage` dispatches. So the port fronted a defect,
+ * not a choice.
  */
 class EscalationService
 {
-    public function __construct(private ?SubmissionRecorder $submissions = null) {}
+    public function __construct(private RecordsSubmissions $submissions) {}
 
     /**
      * @param  array<string, mixed>|null  $contact
@@ -54,7 +63,10 @@ class EscalationService
             $payload['contact'] = $contact;
         }
 
-        return ($this->submissions ??= app(SubmissionRecorder::class))->record(
+        // The five arguments this has always passed. `?array $schema` and `?IntakeProvenance` stay
+        // unpassed: a null `schemaRef` means the notify path resolves nothing for an escalation
+        // either way, and making one addressable is its own question (beam-facade ticket 81).
+        return $this->submissions->record(
             formKey: 'embed/escalation',
             schemaRef: null,
             payload: $payload,
