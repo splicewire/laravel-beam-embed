@@ -67,7 +67,7 @@ class EscalationService
         // unpassed: a null `schemaRef` means the notify path resolves nothing for an escalation
         // either way, and making one addressable is its own question (beam-facade ticket 81).
         return $this->submissions->record(
-            formKey: 'embed/escalation',
+            captureKey: 'embed/escalation',
             schemaRef: null,
             payload: $payload,
             context: [
