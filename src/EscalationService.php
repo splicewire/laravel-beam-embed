@@ -2,11 +2,13 @@
 
 namespace Splicewire\Beam\Embed;
 
-use Splicewire\Beam\Threads\Contracts\Conversation;
+use Splicewire\Beam\Intake\IntakeProvenance;
 use Splicewire\Beam\Models\BeamSubmission;
 use Splicewire\Beam\Submissions\RecordsSubmissions;
+use Splicewire\Beam\Threads\Contracts\Conversation;
 use Splicewire\Beam\Threads\Enums\ParticipantKind;
 use Splicewire\Beam\Threads\Models\Message;
+use Splicewire\Beam\Write\ParticleWriter;
 
 /**
  * The exit to a human (DIE-09 / ADR-0062 decision 5): "Support" reuses existing delivery infra rather
@@ -18,7 +20,7 @@ use Splicewire\Beam\Threads\Models\Message;
  * intent). The Embed Session's status flips to `escalated` and the handoff is recorded.
  *
  * The handoff write rides beam-core's {@see RecordsSubmissions} directly — the same capture path a
- * public intake door takes, so the write goes through {@see \Splicewire\Beam\Write\ParticleWriter} and
+ * public intake door takes, so the write goes through {@see ParticleWriter} and
  * emits `BeamParticlePersisted`, the one post-persist signal every beam write path shares.
  *
  * It used to sit behind a `SubmissionRecorder` inversion port (recohere T02), whose bare-site default
@@ -35,9 +37,16 @@ class EscalationService
 
     /**
      * @param  array<string, mixed>|null  $contact
+     * @param  ?IntakeProvenance  $intake  the visitor's ip / user-agent / submitted-at, supplied by the
+     *                                     host controller that owns the Request (beam-facade ticket 81).
      */
-    public function escalate(Conversation $session, string $reason, ?array $contact = null, bool $consent = false): BeamSubmission
-    {
+    public function escalate(
+        Conversation $session,
+        string $reason,
+        ?array $contact = null,
+        bool $consent = false,
+        ?IntakeProvenance $intake = null,
+    ): BeamSubmission {
         $session->update(['session_status' => 'escalated']);
 
         // TH-08 message-layer cutover: the transcript reads the substrate {@see Message} particle — role is
@@ -63,13 +72,27 @@ class EscalationService
             $payload['contact'] = $contact;
         }
 
-        // The five arguments this has always passed. `?array $schema` and `?IntakeProvenance` stay
-        // unpassed: a null `schemaRef` means the notify path resolves nothing for an escalation
-        // either way, and making one addressable is its own question (beam-facade ticket 81).
+        // ADDRESSABLE, when the host says so (beam-facade ticket 81). An escalation used to pass
+        // `schemaRef: null`, which made `RegistrySchemaResolver` skip tier 1, find no snapshot, return
+        // `[]`, and `NotifyOnSubmission` return immediately — so the one write in this subsystem whose
+        // purpose is REACH A HUMAN could not reach one, by construction.
+        //
+        // The ref is host config rather than a constant here, because the `$id`'s authority belongs to
+        // the host that mints it (`data-schemas.base_uri`) and this package must not stamp one vendor's
+        // domain onto every host's records. Unset = the old unaddressable behaviour, unchanged.
+        //
+        // A configured ref that the registry cannot answer THROWS `UnresolvableSchemaRef` (ticket 62),
+        // so the artifact must be registered before this is set — see the audit ticket 81 spawned.
+        //
+        // `?array $schema` still stays unpassed: a snapshot is the stale read for any addressable
+        // record (ticket 47), so an escalation carrying a ref must resolve through the registry only.
+        $schemaRef = config('embed.escalation.schema_ref');
+
         return $this->submissions->record(
             captureKey: 'embed/escalation',
-            schemaRef: null,
+            schemaRef: is_string($schemaRef) && $schemaRef !== '' ? $schemaRef : null,
             payload: $payload,
+            intake: $intake,
             context: [
                 'kind' => 'embed_escalation',
                 'session_id' => $session->id,
