@@ -7,10 +7,12 @@ use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Splicewire\Beam\Doctor\BeamDoctorManifest;
+use Splicewire\Beam\Embed\Accounts\AuthUserEmbedContributor;
 use Splicewire\Beam\Embed\Capability\CapabilityBroker;
 use Splicewire\Beam\Embed\Contracts\CapabilityAuditRecorder;
 use Splicewire\Beam\Embed\Contracts\KnowledgePivotFreezer;
 use Splicewire\Beam\Embed\Contracts\ScopeResolver;
+use Splicewire\Beam\Embed\Data\AuthUserEmbedData;
 use Splicewire\Beam\Embed\Doctor\BeamEmbedMigrationsAudit;
 use Splicewire\Beam\Embed\Models\Embed;
 use Splicewire\Beam\Embed\Policies\EmbedPolicy;
@@ -18,6 +20,7 @@ use Splicewire\Beam\Embed\Types\EmbedType;
 use Splicewire\Beam\Embed\Types\EmbedTypeRegistry;
 use Splicewire\Beam\Embed\Types\GenericEmbedType;
 use Splicewire\Beam\Install\BeamInstallManifest;
+use Splicewire\Beam\Particle\Contribution\ResourceContributionRegistry;
 
 /**
  * The generic embed subsystem provider (recohere T02; generalized T30). Binds the NO-OP / default
@@ -103,6 +106,8 @@ class BeamEmbedServiceProvider extends PackageServiceProvider
         // every key rotation.
         Gate::policy(Embed::class, EmbedPolicy::class);
 
+        $this->bootMeContribution();
+
         // beam-embed self-registers its own install step DOWN into beam-core's install manifest, same
         // as any other beam-* package — the publish-only tenant migration stubs.
         if ($this->app->bound(BeamInstallManifest::class)) {
@@ -122,5 +127,42 @@ class BeamEmbedServiceProvider extends PackageServiceProvider
                 BeamEmbedMigrationsAudit::class,
             );
         }
+    }
+
+    /**
+     * Embed's slice of beam-accounts' `me` projection — the support launcher's publishable key
+     * (particle-contribution-seam 16/18).
+     *
+     * ⚠️ Registered against a resource KEY, a plain string, and never against beam-accounts'
+     * declaration object — because there may be no declaration yet. Provider boot order is alphabetical
+     * and permanent, so a contributor routinely boots before the owner; storing against the key and
+     * resolving at READ time is what makes contribution order-safe where declaration is order-safe by
+     * a different mechanism entirely (ticket 07's hard constraint on 04).
+     *
+     * The re-entrancy skip is deliberate and narrow: `register()` REJECTS a duplicate `(key, as)` by
+     * design, so a re-run `packageBooted()` would otherwise throw on its OWN pair. A DIFFERENT package
+     * claiming `me.embed` still falls through to that throw, which is the case the rejection exists for.
+     *
+     * The structural guard is not policy: a host that installs beam-embed without beam's particle
+     * registry has no `me` to contribute to and should get nothing rather than a fatal.
+     */
+    private function bootMeContribution(): void
+    {
+        if (
+            ! class_exists(ResourceContributionRegistry::class)
+            || ! $this->app->bound(ResourceContributionRegistry::class)
+        ) {
+            return;
+        }
+
+        $registry = $this->app->make(ResourceContributionRegistry::class);
+
+        $existing = $registry->contribution(AuthUserEmbedContributor::KEY, AuthUserEmbedContributor::AS);
+
+        if ($existing?->data === AuthUserEmbedData::class) {
+            return;
+        }
+
+        $registry->register((new AuthUserEmbedContributor)->contribution());
     }
 }
