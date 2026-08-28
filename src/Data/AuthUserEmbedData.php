@@ -3,7 +3,7 @@
 namespace Splicewire\Beam\Embed\Data;
 
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
-use Splicewire\Beam\Data\Data;
+use Splicewire\Beam\Data\BeamData;
 
 /**
  * Embed's slice of the `me` read projection — the publishable key the in-app support launcher boots
@@ -18,7 +18,7 @@ use Splicewire\Beam\Data\Data;
  * beam-accounts, so the reach-down was legal all along (ticket 16 §A1).
  */
 #[TypeScript]
-class AuthUserEmbedData extends Data
+class AuthUserEmbedData extends BeamData
 {
     public function __construct(
         /**
