@@ -4,7 +4,6 @@ namespace Splicewire\Beam\Embed;
 
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
-use Rushing\Popcorn\Registries\RegistryIndex;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Splicewire\Beam\Doctor\BeamDoctorManifest;
@@ -106,20 +105,6 @@ class BeamEmbedServiceProvider extends PackageServiceProvider
         // `ConfiguredModelPolicy::__call()`, which returns false — so converting would silently deny
         // every key rotation.
         Gate::policy(Embed::class, EmbedPolicy::class);
-
-        // Declaring and indexing are two acts (registry-kernel 21 D1). EmbedTypeRegistry declares
-        // `beam.embed.types`; this is where that root becomes routable through the shared index.
-        // Described unconditionally — a host that only ever serves the generic type still owns the
-        // branch (04 D1: a package's registration must not be present-or-absent by host composition).
-        //
-        // This FORCES the singleton to construct, which is exactly right here: its closure seeds the
-        // GenericEmbedType default, and a host's `callAfterResolving` registration (tower's concierge)
-        // fires off the same resolve. Every provider's register phase has completed by now, so no
-        // registrant can be stranded by the eagerness.
-        $this->app->make(RegistryIndex::class)->describe(
-            $this->app->make(EmbedTypeRegistry::class),
-            by: self::class,
-        );
 
         $this->bootMeContribution();
 
