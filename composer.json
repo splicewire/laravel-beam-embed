@@ -1,6 +1,6 @@
 {
     "name": "splicewire/laravel-beam-embed",
-    "description": "The generic embed subsystem (recohere T02): the schema-driven-CMS embed surface lifted DOWN out of tower-embed onto beam-core. Spawner / publisher / budget / usage-meter / retention / escalation / groundedness-signal / humanity-check + the capability grant/token/tier value objects + the embed models (Embed, Visitor, EmbedKey, EmbedSpendReservation, EmbedCapabilityAudit) — all tower-ref-free. KNOWLEDGE-grounding is INVERTED behind two ports (KnowledgePivotFreezer, ScopeResolver): beam-embed ships NO-OP defaults so a bare beam site works, and tower-embed binds the real tower-Thread-backed implementations. Free-tier arm of the Beam family (ADR-0138 / ADR-0092). Depends DOWN on beam-core + beam-commerce + beam-tenancy; never onto tower/satellite.",
+    "description": "The generic embed subsystem (recohere T02): the schema-driven-CMS embed surface lifted DOWN out of tower-embed onto beam-core. Spawner / publisher / budget / usage-meter / retention / escalation / groundedness-signal / humanity-check + the capability grant/token/tier value objects + the embed models (Embed, Visitor, EmbedKey, EmbedSpendReservation, EmbedCapabilityAudit) \u2014 all tower-ref-free. KNOWLEDGE-grounding is INVERTED behind two ports (KnowledgePivotFreezer, ScopeResolver): beam-embed ships NO-OP defaults so a bare beam site works, and tower-embed binds the real tower-Thread-backed implementations. Free-tier arm of the Beam family (ADR-0138 / ADR-0092). Depends DOWN on beam-core + beam-commerce + beam-tenancy; never onto tower/satellite.",
     "type": "library",
     "license": "MIT",
     "require": {
@@ -34,7 +34,7 @@
     },
     "extra": {
         "package-topology": {
-            "because": "beam-embed is a beam-family package: it depends DOWN on beam-core + beam-commerce + beam-tenancy + beam-threads (it hosts a thread — TH-07) and must never require the tower/satellite tiers it is consumed by",
+            "because": "beam-embed is a beam-family package: it depends DOWN on beam-core + beam-commerce + beam-tenancy + beam-threads (it hosts a thread \u2014 TH-07) and must never require the tower/satellite tiers it is consumed by",
             "mustRequire": [
                 "splicewire/laravel-beam",
                 "splicewire/laravel-beam-threads"
@@ -167,6 +167,10 @@
         {
             "type": "git",
             "url": "https://github.com/schemastud/php-json-ns.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-mdx.git"
         }
     ]
 }
