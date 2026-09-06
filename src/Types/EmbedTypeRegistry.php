@@ -10,7 +10,6 @@ use Rushing\Popcorn\Registries\IsRegistry;
 use Rushing\Popcorn\Registries\OnDuplicate;
 use Rushing\Popcorn\Registries\Optionality;
 use Rushing\Popcorn\Registries\Registry;
-use Rushing\Popcorn\Registries\RegistryArity;
 use Rushing\Popcorn\Registries\RegistryKey;
 
 /**
@@ -25,7 +24,7 @@ use Rushing\Popcorn\Registries\RegistryKey;
  *
  * ## Conformed to the Popcorn kernel (registry-kernel ticket 38)
  *
- * Archetype **a / `PickOne`**: hand-registration, no registrar, no behaviour change. The private
+ * A keyed registry: hand-registration, no registrar, no behaviour change. The private
  * `[key => EmbedType]` array is gone; a composed {@see BasicRegistry} is the storage, and every one of
  * this class's own verbs became sugar over the contract. `beam.embed.types` is the branch of the
  * keyspace it owns, so tower's concierge type is addressable as `beam.embed.types.concierge` through
@@ -48,14 +47,10 @@ use Rushing\Popcorn\Registries\RegistryKey;
  */
 #[IsRegistry(
     root: 'beam.embed.types',
-    of: 'pluggable remote-embed types — one per flavour of embed a host serves',
-    arity: RegistryArity::PickOne,
     entryType: EmbedType::class,
     onDuplicate: OnDuplicate::Supersede,
     optionality: Optionality::Optional,
-    note: 'The FIRST registration also becomes the active default unless setDefault() overrides it, so '
-        .'provider boot order is observable here: beam-embed seeds `generic` from its own register '
-        .'phase and a host type registered later must claim the default explicitly.',
+    description: 'pluggable remote-embed types — one per flavour of embed a host serves. The FIRST registration also becomes the active default unless setDefault() overrides it, so provider boot order is observable here: beam-embed seeds `generic` from its own register phase and a host type registered later must claim the default explicitly.',
 )]
 class EmbedTypeRegistry implements Gated, Registry
 {
