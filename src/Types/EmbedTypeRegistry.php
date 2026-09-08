@@ -7,8 +7,8 @@ use Rushing\Popcorn\Registries\Authorizer;
 use Rushing\Popcorn\Registries\BasicRegistry;
 use Rushing\Popcorn\Registries\Gated;
 use Rushing\Popcorn\Registries\IsRegistry;
-use Rushing\Popcorn\Registries\OnDuplicate;
-use Rushing\Popcorn\Registries\Optionality;
+use Rushing\Popcorn\Registries\OnKeyDuplicate;
+use Rushing\Popcorn\Registries\PopulationRequirement;
 use Rushing\Popcorn\Registries\Registry;
 use Rushing\Popcorn\Registries\RegistryKey;
 
@@ -48,8 +48,8 @@ use Rushing\Popcorn\Registries\RegistryKey;
 #[IsRegistry(
     root: 'beam.embed.types',
     entryType: EmbedType::class,
-    onDuplicate: OnDuplicate::Supersede,
-    optionality: Optionality::Optional,
+    onKeyDuplicate: OnKeyDuplicate::Supersede,
+    populationRequirement: PopulationRequirement::Optional,
     description: 'pluggable remote-embed types — one per flavour of embed a host serves. The FIRST registration also becomes the active default unless setDefault() overrides it, so provider boot order is observable here: beam-embed seeds `generic` from its own register phase and a host type registered later must claim the default explicitly.',
 )]
 class EmbedTypeRegistry implements Gated, Registry
