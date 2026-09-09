@@ -38,6 +38,53 @@ class EmbedPublisher
     ];
 
     /**
+     * Issue a replacement key, including recovery after revocation. A revoked key is
+     * never reactivated; only the new plaintext leaves this call. The current policy
+     * supplies origins because config may have changed while no key was live.
+     *
+     * @return array{0: EmbedKey, 1: string}
+     */
+    public function replaceKey(Conversation $chat, string $tenantId): array
+    {
+        $connection = (new EmbedKey)->getConnection();
+
+        return $connection->transaction(function () use ($chat, $tenantId, $connection) {
+            // Lock a durable central row before reading keys. Locking only old keys
+            // misses a concurrent insertion under READ COMMITTED, and locks nothing
+            // on first issuance. This deliberately serializes rare key replacements
+            // per tenant, including the no-key case.
+            $tenantClass = config('tenancy.tenant_model');
+            $tenantModel = new $tenantClass;
+            $tenant = $connection->table($tenantModel->getTable())
+                ->where($tenantModel->getTenantKeyName(), $tenantId)
+                ->lockForUpdate()
+                ->first();
+            if ($tenant === null) {
+                throw (new \Illuminate\Database\Eloquent\ModelNotFoundException)->setModel($tenantClass, [$tenantId]);
+            }
+
+            $keys = EmbedKey::query()
+                ->where('tenant_id', $tenantId)
+                ->where('published_chat_id', $chat->id)
+                ->orderByDesc('created_at')
+                ->lockForUpdate()
+                ->get();
+            $previous = $keys->firstWhere('revoked_at', null) ?? $keys->first();
+            [$key, $plaintext] = EmbedKey::issue(
+                $tenantId,
+                $chat->id,
+                $chat->embed_policy['allowed_origins'] ?? [],
+                (bool) $previous?->self_deliver,
+            );
+            foreach ($keys as $old) {
+                $old->revoke();
+            }
+
+            return [$key, $plaintext];
+        });
+    }
+
+    /**
      * @param  list<string>  $allowedOrigins
      * @param  array<string, mixed>|null  $launcher  Optional launcher cosmetics; only the
      *                                               whitelisted keys survive — unknown keys are dropped.
