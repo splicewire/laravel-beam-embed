@@ -57,14 +57,14 @@ class EmbedSpawner
         $snapshot = $head->snapshot;
 
         $config = [
-            'agent_id' => $snapshot['agent_id'] ?? null,
+            'agent_id' => $snapshot['agentId'] ?? null,
             'title' => $snapshot['title'] ?? null,
             'model' => $snapshot['model'] ?? null,
-            'max_tool_steps' => $snapshot['max_tool_steps'] ?? null,
-            'model_params' => $snapshot['model_params'] ?? null,
-            'instructions_provider' => $snapshot['instructions_provider'] ?? null,
-            'instructions_text' => $snapshot['instructions_text'] ?? null,
-            'instructions_schemas' => $snapshot['instructions_schemas'] ?? null,
+            'max_tool_steps' => $snapshot['maxToolSteps'] ?? null,
+            'model_params' => $snapshot['modelParams'] ?? null,
+            'instructions_provider' => $snapshot['instructionsProvider'] ?? null,
+            'instructions_text' => $snapshot['instructionsText'] ?? null,
+            'instructions_schemas' => $snapshot['instructionsSchemas'] ?? null,
             'tools' => $snapshot['tools'] ?? null,
         ];
 
