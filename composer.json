@@ -360,6 +360,26 @@
         {
             "type": "git",
             "url": "https://github.com/splicewire/laravel-beam-mdx.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-data-filters.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-data-nav.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-postgres-rls.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/schemastud/laravel-blockdoc.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-analytics.git"
         }
     ]
 }
