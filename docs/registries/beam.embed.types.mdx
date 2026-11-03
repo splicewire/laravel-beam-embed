@@ -1,0 +1,78 @@
+---
+title: Embed types
+segment: beam.embed.types
+nav_order: 100
+excerpt: The flavours of remote embed a host serves, each supplying the handlers behind an embed's capabilities.
+---
+
+# Embed types
+
+`beam.embed.types` holds every **embed type**: one flavour of remote embed a host serves, such as
+tower's `concierge`, a grounded chat over a scoped corpus. Remote embedding is the general
+capability, and a type is one concrete use of it. Each type supplies the server-side handlers for
+the capabilities an embedded widget can call. The generic embed broker resolves the requested type
+here, so which flavour is live is a registration, not a hard-coded branch.
+
+{/* registry-facts:start — generated from the #[IsRegistry] declaration by `splicewire:beam:docs:registries:scaffold`. Rerun the command; do not edit between these markers. */}
+
+- **Root:** `beam.embed.types`
+- **Entries:** `Splicewire\Beam\Embed\Types\EmbedType`
+- **Duplicate keys:** Supersede — a later registration under a taken key replaces the earlier entry, in its place
+- **Population:** Optional — an empty registry is normal
+- **Order:** `100` (display order, ascending)
+- **Declared by:** `Splicewire\Beam\Embed\Types\EmbedTypeRegistry`
+
+{/* registry-facts:end */}
+
+## What ships
+
+The package registers `generic`, whose handlers refuse every capability. A host with nothing else
+registered serves embeds that can authenticate and nothing more, which is the safe default.
+
+## Registering a type
+
+Implement `EmbedType` and register an instance. It keys itself by `key()`:
+
+```php
+use Splicewire\Beam\Embed\Types\EmbedTypeRegistry;
+
+$this->callAfterResolving(EmbedTypeRegistry::class, function (EmbedTypeRegistry $registry) {
+    $registry->register(new ConciergeEmbedType);
+    $registry->setDefault(ConciergeEmbedType::Key);
+});
+```
+
+A type answers three things:
+
+- `key()`: the stable key an embed is published under, as its `embed_type`.
+- `capabilityHandlers()`: the handler class or instance for each capability it supports
+  (`resolve`, `read_scoped`, `request_save`). A capability with no handler is unsupported, and the
+  broker refuses it.
+- `brokerClass()`: the broker to use, almost always the generic `CapabilityBroker`.
+
+Scope resolution, auditing and knowledge freezing are container-bound ports shared by every type, so
+a type uses them rather than redeclaring them.
+
+## The default type
+
+A request that names no type is served by the **default**. The first type registered becomes the
+default, and this package registers `generic` first, so a host type must claim the default
+explicitly with `setDefault()`, as above. Provider boot order is therefore visible here: registering
+a type without `setDefault()` leaves `generic` active.
+
+## Who reads it
+
+The capability broker, on every embed call: it resolves the embed's type (or the default) and
+dispatches the capability to that type's handler. `get()` distinguishes two failures, "no embed type
+is registered" (a missing provider) and "unknown embed type" (a bad request).
+
+## Overriding a type
+
+The duplicate policy is **supersede**: registering under a taken key replaces the type.
+
+## Going deeper
+
+The source is
+[`EmbedTypeRegistry`](https://github.com/splicewire/laravel-beam-embed/blob/main/src/Types/EmbedTypeRegistry.php),
+and the contract is
+[`EmbedType`](https://github.com/splicewire/laravel-beam-embed/blob/main/src/Types/EmbedType.php).
