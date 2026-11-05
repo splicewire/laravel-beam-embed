@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Embed;
 
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
+use Rushing\Popcorn\Registries\ScopesRegistrant;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Splicewire\Beam\Doctor\BeamDoctorManifest;
@@ -47,6 +48,14 @@ use Splicewire\Beam\Particle\Contribution\ResourceContributionRegistry;
  */
 class BeamEmbedServiceProvider extends PackageServiceProvider
 {
+    use ScopesRegistrant;
+
+    /** Every registry write in register()/boot() that names no `$by` records this package. */
+    protected function registrant(): string
+    {
+        return 'splicewire/laravel-beam-embed';
+    }
+
     public function configurePackage(Package $package): void
     {
         $package
