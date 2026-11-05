@@ -8,10 +8,11 @@ excerpt: The flavours of remote embed a host serves, each supplying the handlers
 # Embed types
 
 `beam.embed.types` holds every **embed type**: one flavour of remote embed a host serves, such as
-tower's `concierge`, a grounded chat over a scoped corpus. Remote embedding is the general
-capability, and a type is one concrete use of it. Each type supplies the server-side handlers for
-the capabilities an embedded widget can call. The generic embed broker resolves the requested type
-here, so which flavour is live is a registration, not a hard-coded branch.
+the `concierge` type in [Splicewire](https://splicewire.test/), a grounded chat over a scoped
+corpus. Remote embedding is the general capability, and a type is one concrete use of it. Each type
+supplies the server-side handlers for the capabilities an embedded widget can call. The generic
+embed broker resolves the requested type here, so which flavour is live is a registration, not a
+hard-coded branch.
 
 {/* registry-facts:start — generated from the #[IsRegistry] declaration; regenerate it, do not edit between these markers. */}
 
@@ -70,7 +71,8 @@ is registered" (a missing provider) and "unknown embed type" (a bad request).
 
 ## Overriding a type
 
-The duplicate policy is **supersede**: registering under a taken key replaces the type.
+The [**duplicate-key policy**](/beam/docs/foundations/registries#key-policies) is
+**supersede**: registering under a taken key replaces the type.
 
 ## Going deeper
 
