@@ -14,7 +14,6 @@ use Splicewire\Beam\Embed\Contracts\CapabilityAuditRecorder;
 use Splicewire\Beam\Embed\Contracts\KnowledgePivotFreezer;
 use Splicewire\Beam\Embed\Contracts\ScopeResolver;
 use Splicewire\Beam\Embed\Data\AuthUserEmbedData;
-use Splicewire\Beam\Embed\Doctor\BeamEmbedMigrationsAudit;
 use Splicewire\Beam\Embed\Models\Embed;
 use Splicewire\Beam\Embed\Policies\EmbedPolicy;
 use Splicewire\Beam\Embed\Types\EmbedType;
@@ -131,9 +130,9 @@ class BeamEmbedServiceProvider extends PackageServiceProvider
         // (BeamServiceProvider docblock, laravel-beam) — self-registers the doctor/operator check on ITS
         // OWN migrations, same as every other beam-* package registers it on theirs.
         if ($this->app->bound(BeamDoctorManifest::class)) {
-            $this->app->make(BeamDoctorManifest::class)->register(
+            $this->app->make(BeamDoctorManifest::class)->stubMigrations(
                 'splicewire/laravel-beam-embed',
-                BeamEmbedMigrationsAudit::class,
+                self::class,
             );
         }
     }
