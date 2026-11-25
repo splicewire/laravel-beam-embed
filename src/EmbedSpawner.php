@@ -7,6 +7,7 @@ use InvalidArgumentException;
 use RuntimeException;
 use Splicewire\Beam\Embed\Contracts\KnowledgePivotFreezer;
 use Splicewire\Beam\Embed\Models\Thread;
+use Splicewire\Beam\Embed\Models\Embed;
 use Splicewire\Beam\Embed\Models\Visitor;
 use Splicewire\Beam\Threads\Contracts\Conversation;
 use Splicewire\Beam\Threads\Enums\ParticipantRole;
@@ -32,8 +33,18 @@ class EmbedSpawner
 
     public function spawn(Conversation $published, Visitor $visitor): Conversation
     {
+        $embed = $published instanceof Embed ? $published : null;
+        $embedId = $embed?->getKey();
+        if ($embed !== null) {
+            $source = $embed->source;
+            if (! $source instanceof Conversation) {
+                throw new InvalidArgumentException('Only conversation-backed embeds can spawn chat sessions.');
+            }
+            $published = $source;
+        }
+
         if (! $published->isPublished()) {
-            throw new InvalidArgumentException('Can only spawn a session from a published (embed_template) chat.');
+            throw new InvalidArgumentException('Can only spawn a session from a published embed source.');
         }
 
         // Re-resolve the template as the BASE conversation model ({@see Thread}) so the version HEAD is
@@ -73,10 +84,10 @@ class EmbedSpawner
             'kind' => ThreadKind::EmbedSession,
             'user_id' => null,
             'visitor_id' => $visitor->id,
-            'published_from_id' => $published->id,
+            'published_from_id' => $embedId ?? $published->getKey(),
             'template_version' => $published->template_version,
             'snapshot_config' => $config,
-            'retention_days' => $published->retention_days,
+            'retention_days' => $embed?->retention_days ?? $published->retention_days,
             'session_status' => 'bot',
         ]));
 

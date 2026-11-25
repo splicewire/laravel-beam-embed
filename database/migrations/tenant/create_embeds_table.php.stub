@@ -1,0 +1,79 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Rushing\SchemaConvergence\ConvergentTable;
+use Splicewire\Beam\Embed\Models\EmbedSession;
+use Splicewire\Beam\Embed\Models\Thread;
+use Splicewire\Beam\Threads\Enums\ParticipantRole;
+use Splicewire\Beam\Threads\Models\Participant;
+use Splicewire\Beam\Threads\Enums\ThreadKind;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        ConvergentTable::named('embeds')
+            ->define(function (Blueprint $table) {
+                $table->uuid('id')->primary();
+                $table->string('type');
+                $table->string('source_type');
+                $table->uuid('source_id');
+                $table->uuid('user_id')->nullable()->index();
+                $table->string('visibility')->nullable()->index();
+                $table->json('embed_policy')->nullable();
+                $table->unsignedInteger('retention_days')->nullable();
+                $table->timestamps();
+                $table->index(['source_type', 'source_id']);
+            })
+            ->assert();
+
+        $threads = (new Thread)->getTable();
+        $sessions = (new EmbedSession)->getTable();
+        $participants = (new Participant)->getTable();
+
+        if (! Schema::hasTable($threads)) {
+            return;
+        }
+
+        DB::table($threads)
+            ->where('kind', ThreadKind::EmbedTemplate->value)
+            ->orderBy('id')
+            ->get(['id', 'visibility'])
+            ->each(function (object $thread) use ($sessions, $participants): void {
+                // Ownership is projected from the owner participant since TH-07; it is not a thread column.
+                $userId = Schema::hasTable($participants)
+                    ? DB::table($participants)
+                        ->where('thread_id', $thread->id)
+                        ->where('role', ParticipantRole::Owner->value)
+                        ->where('actor_type', 'user')
+                        ->value('actor_id')
+                    : null;
+                $session = Schema::hasTable($sessions)
+                    ? DB::table($sessions)->where('thread_id', $thread->id)->first()
+                    : null;
+
+                DB::table('embeds')->updateOrInsert(
+                    ['id' => $thread->id],
+                    [
+                        'type' => 'concierge',
+                        'source_type' => 'thread',
+                        'source_id' => $thread->id,
+                        'user_id' => $userId,
+                        'visibility' => $thread->visibility,
+                        'embed_policy' => $session?->embed_policy,
+                        'retention_days' => $session?->retention_days,
+                        'created_at' => $session?->created_at ?? now(),
+                        'updated_at' => $session?->updated_at ?? now(),
+                    ],
+                );
+            });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('embeds');
+    }
+};

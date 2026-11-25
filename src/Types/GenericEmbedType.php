@@ -39,4 +39,9 @@ class GenericEmbedType implements EmbedType
     {
         return CapabilityBroker::class;
     }
+
+    public function sourceKinds(): array
+    {
+        return [];
+    }
 }

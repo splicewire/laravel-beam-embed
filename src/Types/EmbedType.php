@@ -50,4 +50,11 @@ interface EmbedType
      * @return class-string<CapabilityBroker>
      */
     public function brokerClass(): string;
+
+    /**
+     * The source morph aliases this type accepts when a source does not fix its own type.
+     *
+     * @return list<string>
+     */
+    public function sourceKinds(): array;
 }

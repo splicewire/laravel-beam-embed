@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $schema = Schema::connection('central');
+
+        if ($schema->hasTable('embed_keys') && $schema->hasColumn('embed_keys', 'published_chat_id')) {
+            $schema->table('embed_keys', function (Blueprint $table) {
+                $table->renameColumn('published_chat_id', 'embed_id');
+            });
+        }
+    }
+
+    public function down(): void
+    {
+        $schema = Schema::connection('central');
+
+        if ($schema->hasTable('embed_keys') && $schema->hasColumn('embed_keys', 'embed_id')) {
+            $schema->table('embed_keys', function (Blueprint $table) {
+                $table->renameColumn('embed_id', 'published_chat_id');
+            });
+        }
+    }
+};

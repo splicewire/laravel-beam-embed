@@ -15,6 +15,7 @@ use Splicewire\Beam\Embed\Contracts\KnowledgePivotFreezer;
 use Splicewire\Beam\Embed\Contracts\ScopeResolver;
 use Splicewire\Beam\Embed\Data\AuthUserEmbedData;
 use Splicewire\Beam\Embed\Models\Embed;
+use Splicewire\Beam\Embed\Sources\EmbedSourceRegistry;
 use Splicewire\Beam\Embed\Policies\EmbedPolicy;
 use Splicewire\Beam\Embed\Types\EmbedType;
 use Splicewire\Beam\Embed\Types\EmbedTypeRegistry;
@@ -66,6 +67,8 @@ class BeamEmbedServiceProvider extends PackageServiceProvider
                 'tenant/create_embed_spend_reservations_table',
                 'tenant/create_embed_capability_audit_table',
                 'tenant/create_embed_sessions_table',
+                'tenant/create_embeds_table',
+                'central/rename_embed_key_pointer',
             ]);
     }
 
@@ -74,6 +77,8 @@ class BeamEmbedServiceProvider extends PackageServiceProvider
         $this->app->bind(KnowledgePivotFreezer::class, NullKnowledgePivotFreezer::class);
         $this->app->bind(ScopeResolver::class, NullScopeResolver::class);
         $this->app->bind(CapabilityAuditRecorder::class, DefaultCapabilityAuditRecorder::class);
+
+        $this->app->singleton(EmbedSourceRegistry::class, fn () => new EmbedSourceRegistry);
 
         $this->app->singleton(EmbedTypeRegistry::class, function () {
             $registry = new EmbedTypeRegistry;

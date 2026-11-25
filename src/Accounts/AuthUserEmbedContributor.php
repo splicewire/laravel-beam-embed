@@ -66,7 +66,7 @@ class AuthUserEmbedContributor
         }
 
         $embed = Embed::query()
-            ->where('visibility', 'platform')
+            ->whereHas('source', fn ($query) => $query->where('visibility', 'platform'))
             ->latest('created_at')
             ->first();
 

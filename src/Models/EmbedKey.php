@@ -34,7 +34,7 @@ class EmbedKey extends Model
         'self_deliver',
         'key_plaintext',
         'tenant_id',
-        'published_chat_id',
+        'embed_id',
         'allowed_origins',
         'revoked_at',
     ];
@@ -57,7 +57,7 @@ class EmbedKey extends Model
      * @param  list<string>  $allowedOrigins
      * @return array{0: self, 1: string}
      */
-    public static function issue(string $tenantId, string $publishedChatId, array $allowedOrigins = [], bool $selfDeliver = false): array
+    public static function issue(string $tenantId, string $embedId, array $allowedOrigins = [], bool $selfDeliver = false): array
     {
         $plaintext = 'pk_'.Str::random(40);
 
@@ -68,7 +68,7 @@ class EmbedKey extends Model
             // Plaintext stored ONLY for first-party self-deliver keys (null for third-party).
             'key_plaintext' => $selfDeliver ? $plaintext : null,
             'tenant_id' => $tenantId,
-            'published_chat_id' => $publishedChatId,
+            'embed_id' => $embedId,
             'allowed_origins' => $allowedOrigins,
         ]);
 
@@ -87,7 +87,7 @@ class EmbedKey extends Model
     {
         [$new, $plaintext] = static::issue(
             $this->tenant_id,
-            $this->published_chat_id,
+            $this->embed_id,
             $this->allowed_origins ?? [],
             (bool) $this->self_deliver,
         );
@@ -106,13 +106,13 @@ class EmbedKey extends Model
     }
 
     /**
-     * The current live (non-revoked) self-deliver key for a published chat — the one the app
+     * The current live (non-revoked) self-deliver key for a embed — the one the app
      * re-serves to `/me`. Newest wins if more than one somehow exists.
      */
-    public static function currentSelfDeliver(string $publishedChatId): ?self
+    public static function currentSelfDeliver(string $embedId): ?self
     {
         return static::query()
-            ->where('published_chat_id', $publishedChatId)
+            ->where('embed_id', $embedId)
             ->where('self_deliver', true)
             ->whereNull('revoked_at')
             ->latest('created_at')

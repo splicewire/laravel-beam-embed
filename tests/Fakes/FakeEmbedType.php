@@ -34,4 +34,9 @@ class FakeEmbedType implements EmbedType
     {
         return $this->brokerClass ?? CapabilityBroker::class;
     }
+
+    public function sourceKinds(): array
+    {
+        return [];
+    }
 }
