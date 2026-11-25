@@ -95,7 +95,19 @@ class Embed extends Model implements Conversation
 
     public function versionableRecord(): Conversation
     {
-        return $this->conversationSource()->versionableRecord();
+        $source = $this->conversationSource();
+
+        if (! $source instanceof Model) {
+            throw new \LogicException('This embed source is not an Eloquent versionable record.');
+        }
+
+        $record = $source->newQuery()->findOrFail($source->getKey());
+
+        if (! $record instanceof Conversation) {
+            throw new \LogicException('This embed source does not resolve to a versionable conversation.');
+        }
+
+        return $record;
     }
 
     public function toVersionSnapshot(): array

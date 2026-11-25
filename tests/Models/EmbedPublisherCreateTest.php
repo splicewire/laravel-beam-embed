@@ -3,12 +3,14 @@
 namespace Splicewire\Beam\Embed\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Splicewire\Beam\Embed\Capability\CapabilityBroker;
 use Splicewire\Beam\Embed\Contracts\EmbedSourceResolver;
 use Splicewire\Beam\Embed\EmbedPublisher;
 use Splicewire\Beam\Embed\Models\Embed;
+use Splicewire\Beam\Embed\Models\Thread;
 use Splicewire\Beam\Embed\Sources\EmbedSourceRegistry;
 use Splicewire\Beam\Embed\Sources\EmbedSourceResolution;
 use Splicewire\Beam\Embed\Tests\TestCase;
@@ -23,6 +25,7 @@ class EmbedPublisherCreateTest extends TestCase
 
         Schema::dropIfExists('embeds');
         Schema::dropIfExists('or35_embed_probe_sources');
+        Schema::dropIfExists('beam_thread_participants');
         Schema::create('embeds', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->string('type');
@@ -37,6 +40,7 @@ class EmbedPublisherCreateTest extends TestCase
         Schema::create('or35_embed_probe_sources', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->uuid('user_id')->nullable();
+            $table->string('title')->nullable();
             $table->timestamps();
         });
     }
@@ -98,6 +102,34 @@ class EmbedPublisherCreateTest extends TestCase
         $this->assertNotNull($embed->getKey());
         $this->assertNotSame($source->getKey(), $embed->getKey());
         $this->assertDatabaseHas('embeds', ['id' => $embed->getKey(), 'source_id' => $source->getKey()]);
+    }
+
+    public function test_versionable_record_resolves_the_persisted_thread_source(): void
+    {
+        config(['beam.threads.tables.threads' => 'or35_embed_probe_sources']);
+        Relation::morphMap(['thread' => Thread::class], true);
+        Schema::create('beam_thread_participants', function (Blueprint $table): void {
+            $table->uuid('id')->primary();
+            $table->uuid('thread_id');
+            $table->string('role');
+            $table->string('actor_type');
+            $table->timestamps();
+        });
+
+        $source = new Thread;
+        $source->title = 'A real source conversation';
+        $source->save();
+
+        $embed = new Embed;
+        $embed->type = 'probe';
+        $embed->source()->associate($source);
+        $embed->save();
+
+        $record = $embed->fresh()->versionableRecord();
+
+        $this->assertInstanceOf(Thread::class, $record);
+        $this->assertSame($source->getKey(), $record->getKey());
+        $this->assertNotSame($source, $record);
     }
 
     public function test_a_null_embed_column_does_not_fall_back_to_the_source(): void
