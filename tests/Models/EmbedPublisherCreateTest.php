@@ -101,7 +101,20 @@ class EmbedPublisherCreateTest extends TestCase
 
         $this->assertNotNull($embed->getKey());
         $this->assertNotSame($source->getKey(), $embed->getKey());
-        $this->assertDatabaseHas('embeds', ['id' => $embed->getKey(), 'source_id' => $source->getKey()]);
+        $this->assertDatabaseHas('embeds', [
+            'id' => $embed->getKey(),
+            'type' => 'probe',
+            'source_type' => 'or35-probe-source',
+            'source_id' => $source->getKey(),
+        ]);
+
+        config(['beam.threads.tables.threads' => 'threads']);
+        if (! Schema::hasTable('threads')) {
+            Schema::create('threads', function (Blueprint $table): void {
+                $table->uuid('id')->primary();
+            });
+        }
+        $this->assertNull(Thread::find($embed->getKey()), 'Creating an embed from another source must not create a Thread row.');
     }
 
     public function test_versionable_record_resolves_the_persisted_thread_source(): void
