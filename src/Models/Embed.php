@@ -7,12 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Collection;
-use Rushing\Versioning\Contracts\Versionable;
-use Rushing\Versioning\Models\Version;
-use Splicewire\Beam\Embed\Models\EmbedKey;
-use Splicewire\Beam\Threads\Contracts\Conversation;
 use Rushing\PermissionCascade\Concerns\HasUserId;
 use Rushing\PermissionCascade\Concerns\HasVisibility;
+use Rushing\Versioning\Models\Version;
+use Splicewire\Beam\Threads\Contracts\Conversation;
 
 /**
  * An independently addressed embed, typed by its host registration and backed by a polymorphic source.
@@ -20,8 +18,15 @@ use Rushing\PermissionCascade\Concerns\HasVisibility;
  */
 class Embed extends Model implements Conversation
 {
-    use HasUuids;
+    /** Fields Tower reads from the conversation source through an Embed. */
+    private const PROJECTED_CONVERSATION_ATTRIBUTES = [
+        'model',
+        'instructions_text',
+        'template_version',
+    ];
+
     use HasUserId;
+    use HasUuids;
     use HasVisibility;
 
     protected $table = 'embeds';
@@ -118,13 +123,29 @@ class Embed extends Model implements Conversation
     {
         $attribute = parent::getAttribute($key);
 
-        if ($attribute !== null || array_key_exists($key, $this->attributes) || in_array($key, [
-            'embed_policy', 'retention_days', 'type', 'source_type', 'source_id', 'created_at', 'updated_at',
-        ], true)) {
+        if ($attribute !== null || array_key_exists($key, $this->attributes)) {
             return $attribute;
         }
 
-        return $this->source?->getAttribute($key);
+        // An absent own column is still owned by this model. In particular, allowing `id` to
+        // fall through makes HasUuids think the source key is already set and omit Embed id.
+        $ownColumns = [
+            $this->getKeyName(),
+            ...$this->getFillable(),
+            'user_id',
+            'visibility',
+            $this->getCreatedAtColumn(),
+            $this->getUpdatedAtColumn(),
+        ];
+        if (in_array($key, $ownColumns, true)) {
+            return null;
+        }
+
+        if (in_array($key, self::PROJECTED_CONVERSATION_ATTRIBUTES, true)) {
+            return $this->source?->getAttribute($key);
+        }
+
+        return $attribute;
     }
 
     private function conversationSource(): Conversation
