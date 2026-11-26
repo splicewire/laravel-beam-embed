@@ -6,15 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Splicewire\Beam\Embed\Capability\CapabilityBroker;
 use Splicewire\Beam\Embed\Contracts\EmbedSourceResolver;
 use Splicewire\Beam\Embed\EmbedPublisher;
 use Splicewire\Beam\Embed\Models\Embed;
 use Splicewire\Beam\Embed\Models\Thread;
 use Splicewire\Beam\Embed\Sources\EmbedSourceRegistry;
 use Splicewire\Beam\Embed\Sources\EmbedSourceResolution;
+use Splicewire\Beam\Embed\Tests\Fixtures\EmbedFixtureServiceProvider;
 use Splicewire\Beam\Embed\Tests\TestCase;
-use Splicewire\Beam\Embed\Types\EmbedType;
 use Splicewire\Beam\Embed\Types\EmbedTypeRegistry;
 
 class EmbedPublisherCreateTest extends TestCase
@@ -70,32 +69,11 @@ class EmbedPublisherCreateTest extends TestCase
         {
             public function resolve(Model $source): EmbedSourceResolution
             {
-                return new EmbedSourceResolution('Probe', 'probe');
+                return new EmbedSourceResolution('Probe', 'fixture');
             }
         });
-        $types = new EmbedTypeRegistry;
-        $types->register(new class implements EmbedType
-        {
-            public function key(): string
-            {
-                return 'probe';
-            }
-
-            public function capabilityHandlers(): array
-            {
-                return [];
-            }
-
-            public function brokerClass(): string
-            {
-                return CapabilityBroker::class;
-            }
-
-            public function sourceKinds(): array
-            {
-                return ['or35-probe-source'];
-            }
-        });
+        $this->app->register(EmbedFixtureServiceProvider::class);
+        $types = $this->app->make(EmbedTypeRegistry::class);
 
         $embed = (new EmbedPublisher($sources, $types))->create($source);
 
@@ -103,7 +81,7 @@ class EmbedPublisherCreateTest extends TestCase
         $this->assertNotSame($source->getKey(), $embed->getKey());
         $this->assertDatabaseHas('embeds', [
             'id' => $embed->getKey(),
-            'type' => 'probe',
+            'type' => 'fixture',
             'source_type' => 'or35-probe-source',
             'source_id' => $source->getKey(),
         ]);

@@ -18,11 +18,30 @@ class FakeEmbedType implements EmbedType
         private string $key,
         private array $handlers = [],
         private ?string $brokerClass = null,
+        private string $label = 'Test embed',
+        private array $schema = ['type' => 'object', 'properties' => []],
+        private ?string $scriptUrl = 'https://example.test/embed.js',
+        private array $sourceKinds = [],
     ) {}
 
     public function key(): string
     {
         return $this->key;
+    }
+
+    public function label(): string
+    {
+        return $this->label;
+    }
+
+    public function configSchema(): array
+    {
+        return $this->schema;
+    }
+
+    public function clientScriptUrl(): ?string
+    {
+        return $this->scriptUrl;
     }
 
     public function capabilityHandlers(): array
@@ -37,6 +56,6 @@ class FakeEmbedType implements EmbedType
 
     public function sourceKinds(): array
     {
-        return [];
+        return $this->sourceKinds;
     }
 }

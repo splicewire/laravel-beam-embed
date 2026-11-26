@@ -33,6 +33,21 @@ interface EmbedType
      */
     public function key(): string;
 
+    /** Human-readable name shown by hosts when selecting this type. */
+    public function label(): string;
+
+    /**
+     * JSON Schema object describing the type-specific configuration accepted by its client.
+     *
+     * @return array<string, mixed>
+     */
+    public function configSchema(): array;
+
+    /**
+     * URL of the client script that mounts this type, or null when the host bundles it.
+     */
+    public function clientScriptUrl(): ?string;
+
     /**
      * The capability handlers this type provides, keyed by the {@see Capability} they service. A
      * capability with no handler is unsupported for this type and the broker refuses it. Values are

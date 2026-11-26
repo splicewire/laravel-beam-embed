@@ -6,7 +6,9 @@ use InvalidArgumentException;
 use Splicewire\Beam\Embed\Capability\Capability;
 use Splicewire\Beam\Embed\Capability\CapabilityBroker;
 use Splicewire\Beam\Embed\Tests\Fakes\FakeEmbedType;
+use Splicewire\Beam\Embed\Tests\Fixtures\EmbedFixtureServiceProvider;
 use Splicewire\Beam\Embed\Tests\TestCase;
+use Splicewire\Beam\Embed\Types\EmbedType;
 use Splicewire\Beam\Embed\Types\EmbedTypeRegistry;
 use Splicewire\Beam\Embed\Types\GenericEmbedType;
 use Splicewire\Beam\Embed\Types\Handlers\UnsupportedCapabilityHandler;
@@ -25,6 +27,31 @@ use Splicewire\Beam\Embed\Types\Handlers\UnsupportedCapabilityHandler;
  */
 class EmbedTypeRegistryTest extends TestCase
 {
+    public function test_the_type_contract_declares_the_fields_consumers_need_to_list_a_type(): void
+    {
+        $contract = new \ReflectionClass(EmbedType::class);
+
+        foreach (['label', 'sourceKinds', 'configSchema', 'clientScriptUrl'] as $method) {
+            $this->assertTrue($contract->hasMethod($method), "EmbedType must declare {$method}().");
+        }
+    }
+
+    public function test_all_exposes_the_full_registered_type_declaration_from_a_fixture_provider(): void
+    {
+        $this->app->register(EmbedFixtureServiceProvider::class);
+
+        $type = $this->app->make(EmbedTypeRegistry::class)->all()['fixture'];
+
+        $this->assertSame('fixture', $type->key());
+        $this->assertSame('Fixture embed', $type->label());
+        $this->assertSame(['or35-probe-source'], $type->sourceKinds());
+        $this->assertSame(
+            ['type' => 'object', 'properties' => ['title' => ['type' => 'string']]],
+            $type->configSchema(),
+        );
+        $this->assertSame('https://example.test/fixture.js', $type->clientScriptUrl());
+    }
+
     public function test_the_first_registration_becomes_the_default_and_later_ones_do_not_displace_it(): void
     {
         $registry = new EmbedTypeRegistry;

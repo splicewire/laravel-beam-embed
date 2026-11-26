@@ -23,6 +23,21 @@ class GenericEmbedType implements EmbedType
         return self::Key;
     }
 
+    public function label(): string
+    {
+        return 'Generic';
+    }
+
+    public function configSchema(): array
+    {
+        return ['type' => 'object', 'properties' => []];
+    }
+
+    public function clientScriptUrl(): ?string
+    {
+        return null;
+    }
+
     /**
      * @return array<string, class-string<CapabilityHandler>>
      */
